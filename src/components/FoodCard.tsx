@@ -37,10 +37,10 @@ const FoodCard: React.FC<FoodCardProps> = ({
   const discount = Math.round(100 - (price.discounted / price.original) * 100);
   
   return (
-    <Link to={`/food/${id}`}>
-      <Card className={`food-card ${isFlashDeal ? 'flash-deal' : ''}`}>
+    <Link to={`/food/${id}`} className="block h-full">
+      <Card className={`food-card h-full flex flex-col ${isFlashDeal ? 'flash-deal' : ''}`}>
         <div className="relative">
-          <img src={image} alt={title} className="food-card-image" />
+          <img src={image} alt={title} className="food-card-image w-full h-40 sm:h-36 object-cover" />
           {isFlashDeal && (
             <div className="flash-deal-badge">Flash Deal!</div>
           )}
@@ -49,12 +49,12 @@ const FoodCard: React.FC<FoodCardProps> = ({
           </Badge>
         </div>
         <CardHeader className="p-4 pb-2">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          <CardDescription className="text-sm text-muted-foreground">
+          <CardTitle className="text-lg line-clamp-1">{title}</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground line-clamp-1">
             {restaurant}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4 pt-0 pb-2">
+        <CardContent className="p-4 pt-0 pb-2 flex-grow">
           <p className="text-sm line-clamp-2 mb-2">{description}</p>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center text-sm">
@@ -74,7 +74,7 @@ const FoodCard: React.FC<FoodCardProps> = ({
             ))}
           </div>
         </CardContent>
-        <CardFooter className="p-4 pt-2 flex justify-between items-center">
+        <CardFooter className="p-4 pt-2 flex justify-between items-center mt-auto">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground line-through text-sm">
               ${price.original.toFixed(2)}

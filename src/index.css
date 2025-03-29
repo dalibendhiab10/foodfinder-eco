@@ -95,6 +95,17 @@
   }
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 .food-card {
   @apply rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg;
 }
@@ -118,3 +129,4 @@
 .flash-deal-badge {
   @apply absolute top-2 right-2 bg-eco-500 text-white px-2 py-1 rounded-md text-xs font-bold;
 }
+

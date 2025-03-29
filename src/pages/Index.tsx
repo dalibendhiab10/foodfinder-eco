@@ -9,13 +9,16 @@ import FilterBar from '@/components/FilterBar';
 import { foodMockData } from '@/lib/mock-data';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
+import AdBanners from '@/components/AdBanners';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   // Filter the food data to exclude flash deals for the regular listing
   const regularDeals = foodMockData.filter(item => !item.isFlashDeal);
+  const isMobile = useIsMobile();
 
   return (
-    <div className="container max-w-md mx-auto pb-20">
+    <div className="container max-w-md mx-auto pb-20 sm:max-w-2xl md:max-w-4xl lg:max-w-6xl">
       <div className="sticky top-0 z-10 bg-background pt-4 pb-2 px-4">
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -48,6 +51,9 @@ const Index = () => {
       </div>
 
       <div className="px-4">
+        {/* Ad Banners */}
+        <AdBanners />
+        
         <FlashDeals />
         
         <div className="mb-4">
@@ -56,7 +62,7 @@ const Index = () => {
             <Link to="/map" className="text-eco-500 text-sm">View Map</Link>
           </div>
           <FilterBar />
-          <div className="grid grid-cols-1 gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
             {regularDeals.map((food) => (
               <FoodCard key={food.id} {...food} />
             ))}

@@ -5,13 +5,13 @@ import { MapPin } from 'lucide-react';
 // Mock map implementation - in a real app this would use Google Maps or similar
 const MapView = () => {
   return (
-    <div className="relative h-[calc(100vh-200px)] w-full bg-gray-200 map-container">
-      <div className="absolute inset-0 flex items-center justify-center flex-col">
+    <div className="relative h-[calc(100vh-200px)] sm:h-[calc(100vh-150px)] w-full bg-gray-200 map-container">
+      <div className="absolute inset-0 flex items-center justify-center flex-col p-4">
         <MapPin size={32} className="text-eco-500" />
-        <p className="text-center mt-4">
+        <p className="text-center mt-4 max-w-md">
           Map view would integrate with Google Maps API here
         </p>
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground max-w-md">
           Show nearby restaurants and food deals
         </p>
       </div>

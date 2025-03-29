@@ -17,7 +17,7 @@ const FlashDeals = () => {
       <ScrollArea className="w-full whitespace-nowrap pb-4">
         <div className="flex space-x-4 px-1">
           {flashDeals.map((deal) => (
-            <div key={deal.id} className="w-[250px] inline-block">
+            <div key={deal.id} className="w-[250px] sm:w-[280px] md:w-[300px] inline-block">
               <FoodCard {...deal} isFlashDeal={true} />
             </div>
           ))}

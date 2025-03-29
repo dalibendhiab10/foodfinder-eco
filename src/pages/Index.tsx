@@ -19,7 +19,7 @@ const Index = () => {
 
   return (
     <div className="container max-w-md mx-auto pb-20 sm:max-w-2xl md:max-w-4xl lg:max-w-6xl">
-      <div className="sticky top-0 z-10 bg-background pt-4 pb-2 px-4">
+      <div className="sticky top-0 z-30 bg-background pt-4 pb-2 px-4 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-2xl font-bold">FoodFinder Eco</h1>
@@ -57,7 +57,7 @@ const Index = () => {
         <FlashDeals />
         
         <div className="mb-4">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-3 pt-2">
             <h2 className="text-xl font-bold">Nearby Deals</h2>
             <Link to="/map" className="text-eco-500 text-sm">View Map</Link>
           </div>

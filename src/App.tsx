@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import FoodDetailPage from "./pages/FoodDetailPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import AuthPage from "./pages/AuthPage";
+import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => {
             <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/loyalty" element={<ProtectedRoute><LoyaltyProgramPage /></ProtectedRoute>} />
             <Route path="/food/:id" element={<ProtectedRoute><FoodDetailPage /></ProtectedRoute>} />
             
             {/* Catch-all route */}

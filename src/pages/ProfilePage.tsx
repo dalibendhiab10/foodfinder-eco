@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Award, CreditCard, Edit, LogOut, Settings, 
-  Leaf, User, MapPin, Package 
+  Leaf, User, MapPin, Package, Gift, ChevronRight
 } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import { userMockData } from '@/lib/mock-data';
@@ -100,9 +100,19 @@ const ProfilePage = () => {
               <Progress value={65} className="h-2 bg-eco-100" />
             </div>
             
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mb-3">
               235 more points until your next level: Green Guardian
             </p>
+            
+            <Link to="/loyalty">
+              <Button className="w-full flex justify-between bg-eco-500 hover:bg-eco-600">
+                <span className="flex items-center gap-2">
+                  <Gift size={16} />
+                  Loyalty Program & Rewards
+                </span>
+                <ChevronRight size={16} />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
         

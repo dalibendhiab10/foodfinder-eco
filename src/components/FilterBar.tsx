@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -58,7 +57,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilterChange }) => {
   };
 
   return (
-    <div className="sticky top-[150px] sm:top-[168px] md:top-[168px] z-20 bg-background py-3 border-b shadow-sm">
+    <div className="bg-background py-3 border-b shadow-sm">
       <div className="flex items-center justify-between px-4">
         <div className="flex overflow-x-auto gap-2 no-scrollbar">
           <Select value={sortBy} onValueChange={setSortBy}>

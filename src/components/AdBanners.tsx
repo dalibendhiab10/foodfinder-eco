@@ -1,9 +1,15 @@
 
-import React from 'react';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import React, { useState } from 'react';
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious 
+} from '@/components/ui/carousel';
 import AdBanner from './AdBanner';
 
-// Mock data for ad banners
+// Expanded mock data for ad banners
 const adBannersData = [
   {
     id: 1,
@@ -28,20 +34,56 @@ const adBannersData = [
     image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=800&h=400",
     ctaText: "Refer Now",
     ctaLink: "/profile"
+  },
+  {
+    id: 4,
+    title: "Sustainable Shopping Made Easy",
+    description: "Discover eco-friendly options from local businesses",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&h=400",
+    ctaText: "Shop Now",
+    ctaLink: "/map"
+  },
+  {
+    id: 5,
+    title: "Weekend Flash Deals",
+    description: "Special weekend offers on selected items",
+    image: "https://images.unsplash.com/photo-1511688878353-3a2f5be94cd7?auto=format&fit=crop&w=800&h=400",
+    ctaText: "Explore Deals",
+    ctaLink: "/"
   }
 ];
 
 const AdBanners = () => {
+  const [currentBanner, setCurrentBanner] = useState(0);
+
   return (
-    <Carousel className="mb-6">
-      <CarouselContent>
-        {adBannersData.map((banner) => (
-          <CarouselItem key={banner.id}>
-            <AdBanner {...banner} />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-    </Carousel>
+    <div className="relative mb-6">
+      <Carousel className="w-full">
+        <CarouselContent>
+          {adBannersData.map((banner) => (
+            <CarouselItem key={banner.id}>
+              <AdBanner {...banner} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <div className="absolute inset-0 flex items-center justify-between pointer-events-none px-2">
+          <CarouselPrevious className="pointer-events-auto h-8 w-8 opacity-70 hover:opacity-100" />
+          <CarouselNext className="pointer-events-auto h-8 w-8 opacity-70 hover:opacity-100" />
+        </div>
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+          {adBannersData.map((_, index) => (
+            <div 
+              key={index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === currentBanner 
+                  ? "w-4 bg-white" 
+                  : "w-1.5 bg-white/60"
+              }`}
+            />
+          ))}
+        </div>
+      </Carousel>
+    </div>
   );
 };
 

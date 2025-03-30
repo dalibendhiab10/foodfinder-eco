@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import FoodCard from '@/components/FoodCard';
 import BottomNav from '@/components/BottomNav';
 import FlashDeals from '@/components/FlashDeals';
@@ -11,8 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import AdBanners from '@/components/AdBanners';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Index = () => {
+  const [showFilters, setShowFilters] = useState(false);
   // Filter the food data to exclude flash deals for the regular listing
   const regularDeals = foodMockData.filter(item => !item.isFlashDeal);
   const isMobile = useIsMobile();
@@ -33,20 +39,31 @@ const Index = () => {
           </Link>
         </div>
         
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search for restaurants or food..."
-            className="pl-10 pr-4 py-2 w-full"
-          />
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-2">
-          <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">All</Button>
-          <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Restaurant</Button>
-          <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Bakery</Button>
-          <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Grocery</Button>
-          <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Cafe</Button>
+        <div className="relative mb-4 flex gap-2">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search for restaurants or food..."
+              className="pl-10 pr-4 py-2 w-full"
+            />
+          </div>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="h-10 w-10">
+                <Filter size={16} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0" align="end">
+              <div className="flex gap-2 overflow-x-auto flex-wrap p-3">
+                <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">All</Button>
+                <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Restaurant</Button>
+                <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Bakery</Button>
+                <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Grocery</Button>
+                <Button variant="outline" size="sm" className="rounded-full whitespace-nowrap">Cafe</Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 

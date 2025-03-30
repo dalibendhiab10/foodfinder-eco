@@ -1,16 +1,18 @@
 
-import { Home, MapPin, ShoppingBag, User, Search } from "lucide-react";
+import { Home, MapPin, ShoppingBag, User, Search, Bell, ShoppingCart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 
 const BottomNav = () => {
   const location = useLocation();
   const path = location.pathname;
+  const { getTotalItems } = useCart();
 
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: MapPin, label: "Map", path: "/map" },
     { icon: Search, label: "Search", path: "/search" },
-    { icon: ShoppingBag, label: "Orders", path: "/orders" },
+    { icon: ShoppingCart, label: "Cart", path: "/cart", badge: getTotalItems() },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
@@ -27,7 +29,14 @@ const BottomNav = () => {
                 isActive ? "text-eco-500" : "text-muted-foreground"
               }`}
             >
-              <item.icon size={20} />
+              <div className="relative">
+                <item.icon size={20} />
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-eco-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </div>
               <span className="text-xs mt-1">{item.label}</span>
             </Link>
           );

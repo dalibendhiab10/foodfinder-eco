@@ -72,7 +72,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <CartProvider>
         <TooltipProvider>
-          <Toaster position="top-center" />
+          <Toaster />
           <Sonner position="top-center" className="top-0 md:top-4 right-0 md:right-4" />
           <BrowserRouter>
             <Routes>

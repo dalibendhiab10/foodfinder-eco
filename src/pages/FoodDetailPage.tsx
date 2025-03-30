@@ -6,18 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { foodMockData } from '@/lib/mock-data';
 import { Link, useParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import NotificationBell from '@/components/NotificationBell';
+import { useAppDispatch } from '@/redux/hooks';
+import { addItem } from '@/redux/slices/cartSlice';
 
 const FoodDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  const dispatch = useAppDispatch();
   
   // Find the food item by ID
   const food = foodMockData.find(item => item.id === id);
   
   if (!food) {
     return (
-      <div className="container max-w-md mx-auto pt-4 px-4">
+      <div className="container max-w-md mx-auto pt-4 px-4 sm:max-w-2xl lg:max-w-4xl">
         <Link to="/">
           <Button variant="ghost" size="icon" className="mr-2">
             <ArrowLeft size={20} />
@@ -38,6 +42,16 @@ const FoodDetailPage = () => {
   const totalPrice = (food.price.discounted * quantity).toFixed(2);
   
   const handleAddToCart = () => {
+    dispatch(addItem({
+      id: food.id,
+      name: food.title,
+      price: food.price.discounted,
+      quantity: quantity,
+      image: food.image,
+      restaurantId: food.restaurantId,
+      restaurantName: food.restaurant
+    }));
+    
     toast({
       title: "Added to cart",
       description: `${quantity} x ${food.title} added to your cart`,
@@ -59,20 +73,34 @@ const FoodDetailPage = () => {
   };
   
   return (
-    <div className="container max-w-md mx-auto pb-20">
+    <div className="container max-w-md mx-auto pb-20 sm:max-w-2xl lg:max-w-4xl">
+      <div className="sticky top-0 z-30 bg-background pt-4 pb-2 px-4 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <Link to="/">
+              <Button variant="ghost" size="icon" className="mr-2">
+                <ArrowLeft size={20} />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">{food.title}</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/cart">
+              <Button variant="ghost" size="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+              </Button>
+            </Link>
+            <NotificationBell />
+          </div>
+        </div>
+      </div>
+
       <div className="relative">
         <img 
           src={food.image} 
           alt={food.title} 
-          className="w-full h-60 object-cover"
+          className="w-full h-60 object-cover sm:h-72 lg:h-96"
         />
-        <div className="absolute top-4 left-4 z-10">
-          <Link to="/">
-            <Button variant="secondary" size="icon" className="rounded-full bg-white/70 backdrop-blur-sm">
-              <ArrowLeft size={20} />
-            </Button>
-          </Link>
-        </div>
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <Button 
             variant="secondary" 
@@ -103,7 +131,9 @@ const FoodDetailPage = () => {
       
       <div className="p-4">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-1">{food.title}</h1>
+          <div className="hidden sm:block">
+            <h1 className="text-2xl font-bold mb-1">{food.title}</h1>
+          </div>
           <p className="text-muted-foreground mb-2">{food.restaurant}</p>
           
           <div className="flex justify-between items-center mb-4">
@@ -176,7 +206,7 @@ const FoodDetailPage = () => {
           </div>
           
           <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 z-10">
-            <div className="container max-w-md mx-auto">
+            <div className="container max-w-md mx-auto sm:max-w-2xl lg:max-w-4xl">
               <div className="flex justify-between items-center mb-3">
                 <div>
                   <span className="text-sm text-muted-foreground">Total:</span>

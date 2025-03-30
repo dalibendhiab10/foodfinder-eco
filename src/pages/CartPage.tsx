@@ -2,14 +2,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
-import { useCart } from "@/contexts/CartContext";
-import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { removeItem, updateQuantity, clearCart } from "@/redux/slices/cartSlice";
+import BottomNav from "@/components/BottomNav";
 
 const CartPage = () => {
-  const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const { items } = useAppSelector((state) => state.cart);
+  const dispatch = useAppDispatch();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -23,10 +25,14 @@ const CartPage = () => {
         title: "Order Placed Successfully!",
         description: "Your order has been placed and will be delivered soon.",
       });
-      clearCart();
+      dispatch(clearCart());
       navigate("/orders");
       setIsCheckingOut(false);
     }, 2000);
+  };
+
+  const getTotalPrice = () => {
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
   if (items.length === 0) {
@@ -75,20 +81,20 @@ const CartPage = () => {
               <div className="flex items-center">
                 <button 
                   className="p-1 rounded-full hover:bg-muted" 
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  onClick={() => dispatch(updateQuantity({ itemId: item.id, quantity: item.quantity - 1 }))}
                 >
                   <Minus className="h-4 w-4" />
                 </button>
                 <span className="mx-2 min-w-8 text-center">{item.quantity}</span>
                 <button 
                   className="p-1 rounded-full hover:bg-muted" 
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  onClick={() => dispatch(updateQuantity({ itemId: item.id, quantity: item.quantity + 1 }))}
                 >
                   <Plus className="h-4 w-4" />
                 </button>
                 <button 
                   className="ml-3 p-1 rounded-full text-destructive hover:bg-destructive/10"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => dispatch(removeItem(item.id))}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

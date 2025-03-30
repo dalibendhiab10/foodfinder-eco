@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { ShoppingCart, Plus, Minus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAppDispatch } from "@/redux/hooks";
+import { addItem } from "@/redux/slices/cartSlice";
+import { CartItem } from "@/types/cart";
 
 interface Food {
   id: string;
@@ -23,11 +25,11 @@ interface AddToCartButtonProps {
 const AddToCartButton: React.FC<AddToCartButtonProps> = ({ food }) => {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
-  const { addItem } = useCart();
+  const dispatch = useAppDispatch();
   const { toast } = useToast();
 
   const handleAddToCart = () => {
-    addItem({
+    const cartItem: CartItem = {
       id: food.id,
       name: food.name,
       price: food.price,
@@ -35,7 +37,9 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({ food }) => {
       image: food.image,
       restaurantId: food.restaurant?.id,
       restaurantName: food.restaurant?.name
-    });
+    };
+    
+    dispatch(addItem(cartItem));
     
     toast({
       title: "Added to cart",

@@ -1,12 +1,16 @@
 
 import { Home, MapPin, ShoppingBag, User, Search, Bell, ShoppingCart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
+import { useAppSelector } from "@/redux/hooks";
 
 const BottomNav = () => {
   const location = useLocation();
   const path = location.pathname;
-  const { getTotalItems } = useCart();
+  const { items } = useAppSelector(state => state.cart);
+  
+  const getTotalItems = () => {
+    return items.reduce((total, item) => total + item.quantity, 0);
+  };
 
   const navItems = [
     { icon: Home, label: "Home", path: "/" },

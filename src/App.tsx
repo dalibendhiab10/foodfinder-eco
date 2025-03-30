@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Provider as ReduxProvider } from "react-redux";
+import { store } from "./redux/store";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MapPage from "./pages/MapPage";
@@ -17,7 +19,6 @@ import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import NotificationPage from "./pages/NotificationPage";
 import CartPage from "./pages/CartPage";
 import GuideScreen from "./components/GuideScreen";
-import { CartProvider } from "./contexts/CartContext";
 import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
@@ -69,8 +70,8 @@ const App = () => {
   };
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <CartProvider>
+    <ReduxProvider store={store}>
+      <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner position="top-center" className="top-0 md:top-4 right-0 md:right-4" />
@@ -102,8 +103,8 @@ const App = () => {
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </CartProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ReduxProvider>
   );
 };
 

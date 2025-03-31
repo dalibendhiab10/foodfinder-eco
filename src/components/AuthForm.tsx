@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 type AuthMode = 'login' | 'register';
 
@@ -15,42 +17,86 @@ const AuthForm = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // In a real app, this would call an authentication API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate successful auth
-      localStorage.setItem('isAuthenticated', 'true');
-      
-      // Show success message
-      toast({
-        title: mode === 'login' ? 'Logged in successfully' : 'Account created successfully',
-        description: 'Welcome to FoodFinder Eco!',
-      });
-      
-      // Redirect to home page
-      window.location.href = '/';
-    } catch (error) {
+      if (mode === 'login') {
+        // Sign in with Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+        
+        toast({
+          title: 'Logged in successfully',
+          description: 'Welcome to FoodFinder Eco!',
+        });
+
+        // Redirect to home page
+        navigate('/');
+      } else {
+        // Register with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: name,
+            }
+          }
+        });
+
+        if (error) throw error;
+        
+        toast({
+          title: 'Account created successfully',
+          description: 'Welcome to FoodFinder Eco! Please check your email for verification.',
+        });
+        
+        // For demo purposes, auto-sign in after registration
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (!signInError) {
+          navigate('/');
+        }
+      }
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Authentication failed',
-        description: 'Please check your credentials and try again.',
+        description: error.message || 'Please check your credentials and try again.',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialAuth = (provider: string) => {
-    toast({
-      title: `${provider} Sign-in`,
-      description: `${provider} authentication would be implemented here.`,
-    });
+  const handleSocialAuth = async (provider: 'google' | 'apple') => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: `${provider} Sign-in failed`,
+        description: error.message || 'Please try again later.',
+      });
+    }
   };
 
   return (
@@ -82,7 +128,7 @@ const AuthForm = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <a href="/forgot-password" className="text-xs text-eco-500 hover:underline">
+                <a href="/auth/reset-password" className="text-xs text-eco-500 hover:underline">
                   Forgot password?
                 </a>
               </div>
@@ -133,6 +179,7 @@ const AuthForm = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
             <Button type="submit" className="w-full bg-eco-500 hover:bg-eco-600" disabled={loading}>
@@ -157,13 +204,13 @@ const AuthForm = () => {
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Button 
             variant="outline" 
-            onClick={() => handleSocialAuth('Google')}
+            onClick={() => handleSocialAuth('google')}
           >
             Google
           </Button>
           <Button 
             variant="outline" 
-            onClick={() => handleSocialAuth('Apple')}
+            onClick={() => handleSocialAuth('apple')}
           >
             Apple
           </Button>

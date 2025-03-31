@@ -1,138 +1,192 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dot, ExternalLink, ShoppingBag } from 'lucide-react';
-import BottomNav from '@/components/BottomNav';
-import { ordersMockData, userMockData } from '@/lib/mock-data';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import BottomNav from '@/components/BottomNav';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Package, Check, X, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface Order {
+  id: string;
+  created_at: string;
+  total: number;
+  status: 'pending' | 'preparing' | 'delivering' | 'completed' | 'cancelled';
+  restaurant_name?: string;
+  items_count: number;
+}
 
 const OrdersPage = () => {
-  const activeOrders = ordersMockData;
-  const pastOrders = userMockData.orderHistory;
-  
-  return (
-    <div className="container max-w-md mx-auto pb-20">
-      <div className="sticky top-0 z-10 bg-background pt-4 pb-2 px-4">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold">Your Orders</h1>
-          <p className="text-sm text-muted-foreground">Track your current and past orders</p>
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select(`
+            id,
+            created_at,
+            total,
+            status,
+            order_items!inner (count)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Transform the data to match our interface
+        const formattedOrders = data.map(order => ({
+          id: order.id,
+          created_at: order.created_at,
+          total: order.total,
+          status: order.status,
+          items_count: order.order_items[0]?.count || 0
+        }));
+
+        setOrders(formattedOrders);
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Could not load orders',
+          description: error.message
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [user, toast]);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-5 w-5" />;
+      case 'preparing':
+      case 'delivering':
+        return <Package className="h-5 w-5" />;
+      case 'completed':
+        return <Check className="h-5 w-5" />;
+      case 'cancelled':
+        return <X className="h-5 w-5" />;
+      default:
+        return <Clock className="h-5 w-5" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'preparing':
+      case 'delivering':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-16">
+        <div className="p-4 bg-background sticky top-0 z-10 border-b">
+          <h1 className="text-2xl font-bold">My Orders</h1>
         </div>
+        
+        <div className="flex justify-center items-center h-[80vh]">
+          <div className="animate-pulse space-y-4 w-full max-w-md">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-32 bg-muted rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+        
+        <BottomNav />
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="min-h-screen pb-16">
+        <div className="p-4 bg-background sticky top-0 z-10 border-b">
+          <h1 className="text-2xl font-bold">My Orders</h1>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center p-8 h-[70vh]">
+          <Package className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No orders yet</h2>
+          <p className="text-muted-foreground text-center mb-6">When you place orders, they will appear here</p>
+          <Button asChild>
+            <Link to="/">Browse Restaurants</Link>
+          </Button>
+        </div>
+        
+        <BottomNav />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-16">
+      <div className="p-4 bg-background sticky top-0 z-10 border-b">
+        <h1 className="text-2xl font-bold">My Orders</h1>
       </div>
       
-      <div className="px-4">
-        <Tabs defaultValue="active" className="mb-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="past">History</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="active">
-            {activeOrders.length === 0 ? (
-              <div className="text-center py-12">
-                <ShoppingBag size={48} className="mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">No active orders</h3>
-                <p className="text-muted-foreground mb-4">You don't have any active orders right now.</p>
-                <Link to="/">
-                  <Button className="bg-eco-500 hover:bg-eco-600">Browse Deals</Button>
-                </Link>
+      <div className="p-4">
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <Link 
+              key={order.id} 
+              to={`/orders/${order.id}`}
+              className="block border rounded-lg p-4 bg-background hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <div className="font-medium">Order #{order.id.substring(0, 8)}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {format(new Date(order.created_at), 'MMM d, yyyy · h:mm a')}
+                  </div>
+                </div>
+                <Badge 
+                  variant="outline" 
+                  className={`${getStatusColor(order.status)} border-0 capitalize`}
+                >
+                  <span className="flex items-center gap-1">
+                    {getStatusIcon(order.status)}
+                    {order.status}
+                  </span>
+                </Badge>
               </div>
-            ) : (
-              <div className="space-y-4 mt-4">
-                {activeOrders.map((order) => (
-                  <Link key={order.id} to={`/orders/${order.id}`}>
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-medium">{order.restaurant}</h3>
-                            <p className="text-sm text-muted-foreground">Order #{order.id.slice(0, 8)}</p>
-                          </div>
-                          <div className="flex items-center">
-                            <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              order.status === 'preparing' 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              <Dot size={16} />
-                              <span>
-                                {order.status === 'preparing' ? 'Preparing' : 'Ready for pickup'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="border-t pt-2 mt-2">
-                          <p className="text-sm mb-1">
-                            <span className="font-medium">Pickup time:</span> {order.estimatedPickupTime}
-                          </p>
-                          <div className="text-sm mb-2">
-                            <span className="font-medium">Items:</span>{' '}
-                            {order.items.map(item => `${item.quantity}x ${item.name}`).join(', ')}
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="font-medium">${order.total.toFixed(2)}</div>
-                            <Button variant="ghost" size="sm" className="flex items-center gap-1 text-eco-600">
-                              <span>Track Order</span>
-                              <ExternalLink size={14} />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+              
+              <div className="mt-3 flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-muted-foreground">
+                    {order.items_count} {order.items_count === 1 ? 'item' : 'items'}
+                  </div>
+                  <div className="font-semibold">${order.total.toFixed(2)}</div>
+                </div>
+                <div className="text-eco-500">
+                  <ArrowRight size={18} />
+                </div>
               </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="past">
-            {pastOrders.length === 0 ? (
-              <div className="text-center py-12">
-                <ShoppingBag size={48} className="mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">No order history</h3>
-                <p className="text-muted-foreground mb-4">You haven't placed any orders yet.</p>
-                <Link to="/">
-                  <Button className="bg-eco-500 hover:bg-eco-600">Browse Deals</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4 mt-4">
-                {pastOrders.map((order) => (
-                  <Card key={order.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-medium">{order.restaurant}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Order #{order.id.slice(0, 8)} • {order.date}
-                          </p>
-                        </div>
-                        <div className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
-                          Completed
-                        </div>
-                      </div>
-                      
-                      <div className="border-t pt-2 mt-2">
-                        <div className="text-sm mb-2">
-                          <span className="font-medium">Items:</span>{' '}
-                          {order.items.join(', ')}
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="font-medium">${order.total.toFixed(2)}</div>
-                          <Button variant="ghost" size="sm" className="text-eco-600">
-                            Order Again
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+            </Link>
+          ))}
+        </div>
       </div>
       
       <BottomNav />

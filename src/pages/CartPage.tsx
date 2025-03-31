@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
-import { removeItem, updateQuantity, clearCart } from "@/redux/slices/cartSlice";
+import { removeItem, updateQuantity, clearCart, createOrder } from "@/redux/slices/cartSlice";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CartPage = () => {
   const { items } = useAppSelector((state) => state.cart);
@@ -15,20 +16,45 @@ const CartPage = () => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Authentication required',
+        description: 'Please log in to complete your order.',
+      });
+      navigate('/auth');
+      return;
+    }
+
     setIsCheckingOut(true);
     
-    // Simulate a checkout process
-    setTimeout(() => {
+    try {
+      // Create order in Supabase
+      const result = await createOrder(items, user.id);
+      
+      if (!result.success) {
+        throw new Error('Failed to create order');
+      }
+      
       toast({
         title: "Order Placed Successfully!",
         description: "Your order has been placed and will be delivered soon.",
       });
+      
       dispatch(clearCart());
-      navigate("/orders");
+      navigate(`/orders/${result.orderId}`);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Checkout failed',
+        description: error.message || 'Something went wrong. Please try again.',
+      });
+    } finally {
       setIsCheckingOut(false);
-    }, 2000);
+    }
   };
 
   const getTotalPrice = () => {

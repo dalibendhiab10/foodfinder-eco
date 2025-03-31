@@ -1,5 +1,7 @@
+
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { CartItem } from "@/types/cart";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CartState {
   items: CartItem[];
@@ -73,6 +75,54 @@ export const cartSlice = createSlice({
     },
   },
 });
+
+// Create an order in Supabase
+export const createOrder = async (items: CartItem[], userId: string) => {
+  try {
+    // Calculate total amount
+    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const deliveryFee = 3.99;
+    const tax = subtotal * 0.08;
+    const total = subtotal + deliveryFee + tax;
+    
+    // Create order in Supabase
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        subtotal,
+        delivery_fee: deliveryFee,
+        tax,
+        total,
+        status: 'pending'
+      })
+      .select()
+      .single();
+    
+    if (orderError) throw orderError;
+    
+    // Create order items
+    const orderItems = items.map(item => ({
+      order_id: order.id,
+      food_id: item.id,
+      quantity: item.quantity,
+      unit_price: item.price,
+      restaurant_id: item.restaurantId,
+      name: item.name
+    }));
+    
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+    
+    if (itemsError) throw itemsError;
+    
+    return { success: true, orderId: order.id };
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return { success: false, error };
+  }
+};
 
 export const { addItem, removeItem, updateQuantity, clearCart } = cartSlice.actions;
 

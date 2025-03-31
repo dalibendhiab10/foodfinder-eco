@@ -3,9 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./redux/store";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MapPage from "./pages/MapPage";
@@ -15,6 +16,9 @@ import ProfilePage from "./pages/ProfilePage";
 import FoodDetailPage from "./pages/FoodDetailPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import AuthPage from "./pages/AuthPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import NotificationPage from "./pages/NotificationPage";
 import CartPage from "./pages/CartPage";
@@ -23,23 +27,34 @@ import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
 
-// Simple authentication guard
+// Improved auth guard
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
   
-  // For demo purposes, auto-authenticate
-  useEffect(() => {
-    if (!isAuthenticated) {
-      localStorage.setItem("isAuthenticated", "true");
-    }
-  }, [isAuthenticated]);
+  if (isLoading) {
+    // Show loading state while checking auth
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <p className="text-lg font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
-  return isAuthenticated ? <>{children}</> : <Navigate to="/auth" />;
+  if (!user) {
+    // Redirect to auth page but save the intended destination
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+  
+  return <>{children}</>;
 };
 
-const App = () => {
+const AppRoutes = () => {
   const [isReady, setIsReady] = useState(false);
   const [hasSeenGuide, setHasSeenGuide] = useState(false);
+  const { user, isLoading } = useAuth();
   
   // Simple check for hydration and guide status
   useEffect(() => {
@@ -56,13 +71,13 @@ const App = () => {
     }
   }, [hasSeenGuide]);
   
-  if (!isReady) return null;
+  if (!isReady || isLoading) return null;
   
   // Determine the initial route based on whether the user has seen the guide
   const getInitialRoute = () => {
     if (!hasSeenGuide) {
       return <Navigate to="/guide" />;
-    } else if (localStorage.getItem("isAuthenticated") !== "true") {
+    } else if (!user) {
       return <Navigate to="/auth" />;
     } else {
       return <Navigate to="/" />;
@@ -70,37 +85,46 @@ const App = () => {
   };
   
   return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/guide" element={<GuideScreen />} />
+      <Route path="/auth" element={user ? <Navigate to="/" /> : <AuthPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/auth/update-password" element={<UpdatePasswordPage />} />
+      
+      {/* Protected Routes */}
+      <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+      <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+      <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+      <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+      <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/loyalty" element={<ProtectedRoute><LoyaltyProgramPage /></ProtectedRoute>} />
+      <Route path="/food/:id" element={<ProtectedRoute><FoodDetailPage /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
+      <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+      
+      {/* Initial route */}
+      <Route path="/initial" element={getInitialRoute()} />
+      
+      {/* Catch-all route */}
+      <Route path="*" element={<Navigate to="/initial" />} />
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner position="top-center" className="top-0 md:top-4 right-0 md:right-4" />
           <BrowserRouter>
-            <Routes>
-              {/* Guide Route */}
-              <Route path="/guide" element={<GuideScreen />} />
-              
-              {/* Auth Route */}
-              <Route path="/auth" element={<AuthPage />} />
-              
-              {/* Protected Routes */}
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
-              <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
-              <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-              <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/loyalty" element={<ProtectedRoute><LoyaltyProgramPage /></ProtectedRoute>} />
-              <Route path="/food/:id" element={<ProtectedRoute><FoodDetailPage /></ProtectedRoute>} />
-              <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
-              <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-              
-              {/* Initial route */}
-              <Route path="/initial" element={getInitialRoute()} />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<Navigate to="/initial" />} />
-            </Routes>
+            <AuthProvider>
+              <AppRoutes />
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>

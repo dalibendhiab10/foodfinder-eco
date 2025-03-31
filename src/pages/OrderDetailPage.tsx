@@ -1,186 +1,264 @@
 
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { ArrowLeft, MapPin, Package, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Phone } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { ordersMockData } from '@/lib/mock-data';
-import { Link, useParams } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit_price: number;
+}
+
+interface OrderDetail {
+  id: string;
+  created_at: string;
+  status: string;
+  subtotal: number;
+  delivery_fee: number;
+  tax: number;
+  total: number;
+  restaurant_name?: string;
+  restaurant_address?: string;
+  items: OrderItem[];
+}
 
 const OrderDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
-  // Find the order by ID
-  const order = ordersMockData.find(o => o.id === id);
-  
-  if (!order) {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if (!id || !user) return;
+
+      try {
+        // First get order
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (orderError) throw orderError;
+
+        // Then get order items
+        const { data: items, error: itemsError } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', id);
+
+        if (itemsError) throw itemsError;
+
+        setOrder({
+          ...orderData,
+          items: items
+        });
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Could not load order details',
+          description: error.message
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [id, user, toast]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'preparing':
+      case 'delivering':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="container max-w-md mx-auto pt-4 px-4">
-        <Link to="/orders">
-          <Button variant="ghost" size="icon" className="mr-2">
-            <ArrowLeft size={20} />
-          </Button>
-        </Link>
-        <div className="text-center mt-20">
-          <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
-          <p className="mb-6">The order you're looking for doesn't exist.</p>
-          <Link to="/orders">
-            <Button className="bg-eco-500 hover:bg-eco-600">Return to Orders</Button>
+      <div className="min-h-screen">
+        <div className="p-4 bg-background sticky top-0 z-10 border-b flex items-center">
+          <Link to="/orders" className="mr-2">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
           </Link>
+          <h1 className="text-xl font-bold">Order Details</h1>
+        </div>
+        
+        <div className="h-[80vh] flex items-center justify-center">
+          <div className="animate-pulse space-y-6 w-full max-w-md px-4">
+            <div className="h-10 bg-muted rounded w-3/4"></div>
+            <div className="h-32 bg-muted rounded"></div>
+            <div className="space-y-3">
+              <div className="h-5 bg-muted rounded w-1/2"></div>
+              <div className="h-5 bg-muted rounded w-3/4"></div>
+              <div className="h-5 bg-muted rounded w-2/3"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
-  
-  const handleContactStore = () => {
-    toast({
-      title: "Contact Restaurant",
-      description: "Calling the restaurant...",
-    });
-  };
-  
-  const handleCancelOrder = () => {
-    toast({
-      title: "Cancel Order",
-      description: "Your order has been canceled and refunded.",
-    });
-  };
-  
-  return (
-    <div className="container max-w-md mx-auto pb-6">
-      <div className="sticky top-0 z-10 bg-background pt-4 pb-2 px-4">
-        <div className="flex items-center mb-4">
-          <Link to="/orders">
-            <Button variant="ghost" size="icon" className="mr-2">
-              <ArrowLeft size={20} />
+
+  if (!order) {
+    return (
+      <div className="min-h-screen">
+        <div className="p-4 bg-background sticky top-0 z-10 border-b flex items-center">
+          <Link to="/orders" className="mr-2">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold">Order #{order.id.slice(0, 8)}</h1>
+          <h1 className="text-xl font-bold">Order Details</h1>
         </div>
-      </div>
-      
-      <div className="px-4">
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <h2 className="font-bold mb-2">Order Status</h2>
-            
-            <div className="relative mb-6">
-              <div className="flex items-center justify-between mb-2">
-                {order.trackingSteps.map((step, index) => (
-                  <div 
-                    key={step.id} 
-                    className={`w-6 h-6 rounded-full flex items-center justify-center z-10 ${
-                      step.completed ? 'bg-eco-500 text-white' : 'bg-gray-200 text-gray-500'
-                    }`}
-                  >
-                    {step.completed ? '✓' : index + 1}
-                  </div>
-                ))}
-              </div>
-              
-              <div className="absolute top-3 left-3 right-3 h-[2px] bg-gray-200 -z-0"></div>
-              
-              <div className="flex items-center justify-between text-xs">
-                {order.trackingSteps.map((step) => (
-                  <div key={step.id} className="text-center w-16">
-                    <p className={step.completed ? 'font-medium' : 'text-muted-foreground'}>
-                      {step.name}
-                    </p>
-                    {step.time && (
-                      <p className="text-muted-foreground mt-1">{step.time}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="bg-eco-50 p-3 rounded-lg mb-4">
-              <p className="text-center">
-                <span className="font-medium">Estimated Pickup:</span> {order.estimatedPickupTime}
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="flex gap-2 items-center"
-                onClick={handleContactStore}
-              >
-                <Phone size={16} />
-                <span>Contact Store</span>
-              </Button>
-              <Link to={`https://maps.google.com/?q=${order.restaurantAddress}`} target="_blank">
-                <Button
-                  variant="outline"
-                  className="w-full flex gap-2 items-center"
-                >
-                  <MapPin size={16} />
-                  <span>View Location</span>
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
         
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <h2 className="font-bold mb-3">Order Details</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Restaurant</p>
-                <p className="font-medium">{order.restaurant}</p>
-                <p className="text-sm">{order.restaurantAddress}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Items</p>
-                {order.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <p>{item.quantity}x {item.name}</p>
-                    <p>${item.price.toFixed(2)}</p>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="border-t pt-3">
-                <div className="flex justify-between items-center">
-                  <p>Subtotal</p>
-                  <p>${order.total.toFixed(2)}</p>
-                </div>
-                <div className="flex justify-between items-center text-muted-foreground">
-                  <p>Service Fee</p>
-                  <p>$0.00</p>
-                </div>
-                <div className="flex justify-between items-center font-bold mt-2">
-                  <p>Total</p>
-                  <p>${order.total.toFixed(2)}</p>
-                </div>
-              </div>
-              
-              <div className="border-t pt-3">
-                <p className="text-sm text-muted-foreground">Payment Method</p>
-                <p>Visa •••• 4242</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Order Date</p>
-                <p>{order.date}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <div className="text-center">
-          <Button 
-            variant="ghost" 
-            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={handleCancelOrder}
-          >
-            Cancel Order
+        <div className="h-[80vh] flex flex-col items-center justify-center p-4">
+          <Package className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Order not found</h2>
+          <p className="text-muted-foreground text-center mb-6">This order may have been cancelled or doesn't exist</p>
+          <Button asChild>
+            <Link to="/orders">Back to Orders</Link>
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-16">
+      <div className="p-4 bg-background sticky top-0 z-10 border-b flex items-center">
+        <Link to="/orders" className="mr-2">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <h1 className="text-xl font-bold">Order Details</h1>
+      </div>
+      
+      <div className="p-4">
+        <div className="rounded-lg border mb-6">
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="font-semibold text-lg">Order #{order.id.substring(0, 8)}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(order.created_at), 'MMMM d, yyyy · h:mm a')}
+                </p>
+              </div>
+              <Badge 
+                variant="outline" 
+                className={`${getStatusColor(order.status)} border-0 px-3 py-1 capitalize text-xs`}
+              >
+                {order.status}
+              </Badge>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4 flex-shrink-0" />
+                <span>Ordered on {format(new Date(order.created_at), 'MMMM d, yyyy')}</span>
+              </div>
+              
+              {order.restaurant_name && (
+                <div className="flex gap-2 text-sm text-muted-foreground">
+                  <Package className="h-4 w-4 flex-shrink-0" />
+                  <span>From {order.restaurant_name}</span>
+                </div>
+              )}
+              
+              {order.restaurant_address && (
+                <div className="flex gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 flex-shrink-0" />
+                  <span>{order.restaurant_address}</span>
+                </div>
+              )}
+              
+              <div className="flex gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                <span>
+                  {order.status === 'completed' 
+                    ? 'Delivered on ' + format(new Date(order.created_at), 'MMMM d') 
+                    : 'Estimated delivery in 30-45 minutes'}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="p-4">
+            <h3 className="font-medium mb-3">Order Items</h3>
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <div key={item.id} className="flex justify-between">
+                  <div className="flex gap-2">
+                    <span className="text-muted-foreground">{item.quantity}×</span>
+                    <span>{item.name}</span>
+                  </div>
+                  <span className="font-medium">${(item.unit_price * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <Separator />
+          
+          <div className="p-4">
+            <h3 className="font-medium mb-3">Order Summary</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>${order.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Delivery Fee</span>
+                <span>${order.delivery_fee.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tax</span>
+                <span>${order.tax.toFixed(2)}</span>
+              </div>
+              <Separator className="my-2" />
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>${order.total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <Button asChild className="w-full mb-4">
+          <a href={`tel:+15555555555`}>
+            Contact Support
+          </a>
+        </Button>
+        
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/orders">
+            Back to Orders
+          </Link>
+        </Button>
       </div>
     </div>
   );

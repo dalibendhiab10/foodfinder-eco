@@ -9,7 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      food_items: {
+        Row: {
+          created_at: string
+          description: string
+          discounted_price: number
+          distance: string | null
+          id: string
+          image_url: string | null
+          is_flash_deal: boolean | null
+          original_price: number
+          quantity: number
+          restaurant_id: string
+          tags: string[] | null
+          time_remaining: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          discounted_price: number
+          distance?: string | null
+          id?: string
+          image_url?: string | null
+          is_flash_deal?: boolean | null
+          original_price: number
+          quantity?: number
+          restaurant_id: string
+          tags?: string[] | null
+          time_remaining?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          discounted_price?: number
+          distance?: string | null
+          id?: string
+          image_url?: string | null
+          is_flash_deal?: boolean | null
+          original_price?: number
+          quantity?: number
+          restaurant_id?: string
+          tags?: string[] | null
+          time_remaining?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

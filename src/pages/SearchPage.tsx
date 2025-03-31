@@ -1,35 +1,51 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, X } from 'lucide-react';
 import FoodCard from '@/components/FoodCard';
 import BottomNav from '@/components/BottomNav';
-import { foodMockData } from '@/lib/mock-data';
 import FilterBar from '@/components/FilterBar';
+import { searchFoodItems, FoodItem } from '@/services/foodService';
 
 const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<typeof foodMockData>([]);
+  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [recentSearches] = useState(['bakery', 'vegan', 'pizza', 'sushi']);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!searchQuery.trim()) return;
     
-    // In a real app, this would call an API
-    const results = foodMockData.filter(
-      item => 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.restaurant.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-    
-    setSearchResults(results);
-    setHasSearched(true);
+    try {
+      setIsLoading(true);
+      const results = await searchFoodItems(searchQuery);
+      setSearchResults(results);
+      setHasSearched(true);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const performSearch = async (term: string) => {
+    try {
+      setSearchQuery(term);
+      setIsLoading(true);
+      const results = await searchFoodItems(term);
+      setSearchResults(results);
+      setHasSearched(true);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const clearSearch = () => {
@@ -61,7 +77,14 @@ const SearchPage = () => {
       </div>
 
       <div className="px-4">
-        {!hasSearched ? (
+        {isLoading && (
+          <div className="py-8 text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-eco-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Searching...</p>
+          </div>
+        )}
+
+        {!isLoading && !hasSearched ? (
           <div>
             <h2 className="text-lg font-medium mb-3">Recent Searches</h2>
             <div className="flex flex-wrap gap-2 mb-6">
@@ -70,18 +93,7 @@ const SearchPage = () => {
                   key={index} 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => {
-                    setSearchQuery(term);
-                    setHasSearched(true);
-                    const results = foodMockData.filter(
-                      item => 
-                        item.title.toLowerCase().includes(term.toLowerCase()) || 
-                        item.description.toLowerCase().includes(term.toLowerCase()) ||
-                        item.restaurant.toLowerCase().includes(term.toLowerCase()) ||
-                        item.tags.some(tag => tag.toLowerCase().includes(term.toLowerCase()))
-                    );
-                    setSearchResults(results);
-                  }}
+                  onClick={() => performSearch(term)}
                 >
                   {term}
                 </Button>
@@ -95,16 +107,7 @@ const SearchPage = () => {
                   key={index} 
                   variant="outline" 
                   className="h-20 flex flex-col justify-center items-center"
-                  onClick={() => {
-                    setSearchQuery(category);
-                    setHasSearched(true);
-                    const results = foodMockData.filter(
-                      item => 
-                        item.category === category.toLowerCase() ||
-                        item.tags.some(tag => tag.toLowerCase() === category.toLowerCase())
-                    );
-                    setSearchResults(results);
-                  }}
+                  onClick={() => performSearch(category)}
                 >
                   {category}
                 </Button>
@@ -118,14 +121,7 @@ const SearchPage = () => {
                   key={index} 
                   variant="ghost" 
                   className="w-full justify-start gap-2 px-2"
-                  onClick={() => {
-                    setSearchQuery(item);
-                    setHasSearched(true);
-                    const results = foodMockData.filter(
-                      food => food.title.toLowerCase().includes(item.toLowerCase())
-                    );
-                    setSearchResults(results);
-                  }}
+                  onClick={() => performSearch(item)}
                 >
                   <Search size={16} />
                   <span>{item}</span>
@@ -133,7 +129,7 @@ const SearchPage = () => {
               ))}
             </div>
           </div>
-        ) : (
+        ) : !isLoading && (
           <div>
             <div className="mb-2 flex justify-between items-center">
               <h2 className="text-lg font-medium">Search Results</h2>
@@ -156,7 +152,22 @@ const SearchPage = () => {
             ) : (
               <div className="grid grid-cols-1 gap-4 mt-4">
                 {searchResults.map((food) => (
-                  <FoodCard key={food.id} {...food} />
+                  <FoodCard 
+                    key={food.id} 
+                    id={food.id}
+                    title={food.title}
+                    description={food.description}
+                    price={{
+                      original: food.original_price,
+                      discounted: food.discounted_price
+                    }}
+                    image={food.image_url || ''}
+                    restaurant={food.restaurant_name || ''}
+                    distance={food.distance || ''}
+                    timeRemaining={food.time_remaining || ''}
+                    tags={food.tags || []}
+                    isFlashDeal={food.is_flash_deal}
+                  />
                 ))}
               </div>
             )}

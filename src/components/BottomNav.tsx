@@ -1,7 +1,6 @@
 
-import { Home, MapPin, ShoppingBag, User, Search, Bell } from "lucide-react";
+import { Home, MapPin, Search, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useAppSelector } from "@/redux/hooks";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -29,11 +28,6 @@ const BottomNav = () => {
             >
               <div className="relative">
                 <item.icon size={20} />
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-eco-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                    {item.badge > 9 ? '9+' : item.badge}
-                  </span>
-                )}
               </div>
               <span className="text-xs mt-1">{item.label}</span>
             </Link>

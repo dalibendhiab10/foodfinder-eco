@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, ShoppingBag } from 'lucide-react';
@@ -86,7 +85,6 @@ const Index = () => {
       </div>
 
       <div className="px-4">
-        {/* Ad Banners */}
         <AdBanners />
         
         <FlashDeals />

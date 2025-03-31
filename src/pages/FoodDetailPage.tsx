@@ -85,7 +85,7 @@ const FoodDetailPage = () => {
             <h1 className="text-xl font-bold">{food.title}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/orders">
+            <Link to="/cart">
               <Button variant="ghost" size="icon">
                 <ShoppingBag size={20} />
               </Button>

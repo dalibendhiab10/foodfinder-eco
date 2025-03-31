@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Clock, MapPin, Bookmark, Share2, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Bookmark, Share2, ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { foodMockData } from '@/lib/mock-data';
 import { Link, useParams } from 'react-router-dom';
@@ -48,7 +48,7 @@ const FoodDetailPage = () => {
       price: food.price.discounted,
       quantity: quantity,
       image: food.image,
-      restaurantId: food.id + "-restaurant",
+      restaurantId: food.restaurant + "-id", // Create a synthetic ID from restaurant name
       restaurantName: food.restaurant
     }));
     
@@ -85,9 +85,9 @@ const FoodDetailPage = () => {
             <h1 className="text-xl font-bold">{food.title}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/cart">
+            <Link to="/orders">
               <Button variant="ghost" size="icon">
-                <ShoppingCart size={20} />
+                <ShoppingBag size={20} />
               </Button>
             </Link>
             <Link to="/notifications">

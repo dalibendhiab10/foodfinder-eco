@@ -6,7 +6,6 @@ yarn-debug.log*
 www
 android
 build
-capacitor.config.ts
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*

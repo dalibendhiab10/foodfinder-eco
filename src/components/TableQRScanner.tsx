@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Scanner } from '@yudiel/react-qr-scanner';
-import { toast } from '@/hooks/use-toast';
+import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
+import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTableSessionByCode } from '@/services/restaurantService';
@@ -16,8 +16,11 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleScan = async (result: string) => {
-    if (isLoading) return;
+  const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
+    if (isLoading || detectedCodes.length === 0) return;
+
+    const result = detectedCodes[0].rawValue; // Extract the raw value from the first detected code
+    if (!result) return; // Ensure we have a result
     
     try {
       setIsLoading(true);
@@ -28,11 +31,7 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
       // Check if this is a valid table session code
       // Expected format: tableSession_CODE123
       if (!result.startsWith('tableSession_')) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid QR Code',
-          description: 'This QR code is not for a restaurant table.'
-        });
+        toast.error('Invalid QR Code: This QR code is not for a restaurant table.');
         return;
       }
       
@@ -43,11 +42,7 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
       const session = await getTableSessionByCode(sessionCode);
       
       if (!session) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid Session',
-          description: 'This table session is no longer active or does not exist.'
-        });
+        toast.error('Invalid Session: This table session is no longer active or does not exist.');
         return;
       }
       
@@ -55,21 +50,14 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
       if (onSessionStart) {
         onSessionStart(session.id, session.table_id, session.restaurant_id);
       } else {
-        toast({
-          title: 'Table Session Found',
-          description: 'You are now connected to the table session.'
-        });
+        toast.success('Table Session Found: You are now connected to the table session.');
         
         // Navigate to restaurant menu page with the session
         navigate(`/restaurant/${session.restaurant_id}/table/${session.table_id}/session/${session.id}`);
       }
     } catch (error) {
       console.error('Error processing QR code:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Something went wrong',
-        description: 'Could not process the QR code. Please try again.'
-      });
+      toast.error('Something went wrong: Could not process the QR code. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -77,11 +65,7 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
 
   const handleError = (error: any) => {
     console.error('QR scan error:', error);
-    toast({
-      variant: 'destructive',
-      title: 'Scanner Error',
-      description: 'There was a problem with the QR scanner. Please try again.'
-    });
+    toast.error('Scanner Error: There was a problem with the QR scanner. Please try again.');
   };
 
   return (
@@ -99,7 +83,6 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
             <Scanner
               onScan={handleScan}
               onError={handleError}
-              containerStyle={{ borderRadius: '0.5rem' }}
             />
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">

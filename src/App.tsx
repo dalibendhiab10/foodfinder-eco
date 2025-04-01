@@ -1,4 +1,5 @@
-
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -129,6 +130,18 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner position="top-center" className="top-0 md:top-4 right-0 md:right-4" />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light" // or "dark" or "colored"
+          />
           <BrowserRouter>
             <AuthProvider>
               <AppRoutes />

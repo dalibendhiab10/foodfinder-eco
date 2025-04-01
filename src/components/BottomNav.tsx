@@ -20,7 +20,7 @@ const BottomNav = () => {
         }`}
       >
         <Home className="w-5 h-5" />
-        <span className="text-xs mt-1">Home</span>
+        {isActive("/") && <span className="text-xs mt-1">Home</span>}
       </Link>
       
       <Link
@@ -30,7 +30,7 @@ const BottomNav = () => {
         }`}
       >
         <Search className="w-5 h-5" />
-        <span className="text-xs mt-1">Search</span>
+        {isActive("/search") && <span className="text-xs mt-1">Search</span>}
       </Link>
       
       <Link
@@ -40,7 +40,7 @@ const BottomNav = () => {
         }`}
       >
         <QrCode className="w-5 h-5" />
-        <span className="text-xs mt-1">Scan QR</span>
+        {isActive("/scan-qr") && <span className="text-xs mt-1">Scan QR</span>}
       </Link>
       
       <Link
@@ -50,7 +50,7 @@ const BottomNav = () => {
         }`}
       >
         <Package className="w-5 h-5" />
-        <span className="text-xs mt-1">Orders</span>
+        {isActive("/orders") && <span className="text-xs mt-1">Orders</span>}
       </Link>
       
       <Link
@@ -60,13 +60,10 @@ const BottomNav = () => {
         }`}
       >
         <User className="w-5 h-5" />
-        <span className="text-xs mt-1">Profile</span>
+        {isActive("/profile") && <span className="text-xs mt-1">Profile</span>}
       </Link>
       
-      <div className="flex items-center space-x-3 absolute top-0 right-4 transform -translate-y-1/2 bg-background border rounded-full px-2 py-1">
-        <NotificationBell />
-        <CartButton />
-      </div>
+
     </div>
   );
 };

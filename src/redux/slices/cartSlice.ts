@@ -117,6 +117,19 @@ export const createOrder = async (items: CartItem[], userId: string) => {
     
     if (itemsError) throw itemsError;
     
+    // Create notification for user
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title: 'Order Confirmed',
+        message: `Your order #${order.id.substring(0, 8)} has been confirmed and is being prepared.`,
+        type: 'order',
+        is_read: false
+      });
+    
+    if (notificationError) console.error('Error creating notification:', notificationError);
+    
     return { success: true, orderId: order.id };
   } catch (error) {
     console.error('Error creating order:', error);

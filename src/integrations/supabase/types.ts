@@ -65,6 +65,124 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          food_id: string
+          id: string
+          name: string
+          order_id: string
+          quantity: number
+          restaurant_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          food_id: string
+          id?: string
+          name: string
+          order_id: string
+          quantity: number
+          restaurant_id: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          food_id?: string
+          id?: string
+          name?: string
+          order_id?: string
+          quantity?: number
+          restaurant_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          delivery_fee: number
+          id: string
+          status: string
+          subtotal: number
+          tax: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_fee: number
+          id?: string
+          status?: string
+          subtotal: number
+          tax: number
+          total: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_fee?: number
+          id?: string
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           created_at: string

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Restaurant {
@@ -137,4 +136,33 @@ export async function searchFoodItems(query: string): Promise<FoodItem[]> {
     ...item,
     restaurant_name: item.restaurants?.name || '',
   }));
+}
+
+export async function createNotification(
+  userId: string,
+  title: string,
+  message: string,
+  type: 'order' | 'promotion' | 'delivery' | 'payment' | 'system'
+) {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title,
+        message,
+        type,
+        is_read: false
+      });
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in createNotification:', error);
+    return false;
+  }
 }

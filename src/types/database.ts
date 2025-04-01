@@ -1,3 +1,4 @@
+
 // Add or extend the existing type definitions
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'on_the_way' | 'pick_up' | 'completed' | 'delivered' | 'cancelled';
 
@@ -57,6 +58,7 @@ export interface Order {
   table_session_id?: string;
   order_type?: string;
   is_paid?: boolean;
+  items_count?: number; // Added for OrdersPage
 }
 
 export interface OrderItem {
@@ -83,3 +85,26 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+// Utility function to ensure OrderStatus type safety
+export const ensureOrderStatus = (status: string): OrderStatus => {
+  const validStatus: OrderStatus[] = [
+    'pending', 'confirmed', 'preparing', 'on_the_way',
+    'pick_up', 'completed', 'delivered', 'cancelled'
+  ];
+  
+  return validStatus.includes(status as OrderStatus) 
+    ? (status as OrderStatus) 
+    : 'pending';
+};
+
+// Utility function to ensure NotificationType type safety
+export const ensureNotificationType = (type: string): NotificationType => {
+  const validTypes: NotificationType[] = [
+    'order', 'promotion', 'delivery', 'payment', 'system'
+  ];
+  
+  return validTypes.includes(type as NotificationType)
+    ? (type as NotificationType)
+    : 'system';
+};

@@ -97,7 +97,7 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
         {isScanning ? (
           <div className="relative overflow-hidden rounded-lg">
             <Scanner
-              onResult={handleScan}
+              onScan={handleScan}
               onError={handleError}
               containerStyle={{ borderRadius: '0.5rem' }}
             />

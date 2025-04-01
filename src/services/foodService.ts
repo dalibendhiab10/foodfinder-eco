@@ -39,7 +39,6 @@ export async function getAllFoodItems(): Promise<FoodItem[]> {
     throw error;
   }
 
-  // Format the data to match our expected structure
   return (data || []).map(item => ({
     ...item,
     restaurant_name: item.restaurants?.name || '',

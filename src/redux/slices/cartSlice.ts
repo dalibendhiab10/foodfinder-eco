@@ -107,7 +107,7 @@ export const createOrder = async (items: CartItem[], userId: string) => {
       food_id: item.id,
       quantity: item.quantity,
       unit_price: item.price,
-      restaurant_id: item.restaurantId,
+      restaurant_id: item.restaurantId || '',
       name: item.name
     }));
     

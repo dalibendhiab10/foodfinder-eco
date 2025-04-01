@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { QrScanner } from '@yudiel/react-qr-scanner';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -96,7 +96,7 @@ const TableQRScanner: React.FC<TableQRScannerProps> = ({ onSessionStart }) => {
       <CardContent>
         {isScanning ? (
           <div className="relative overflow-hidden rounded-lg">
-            <QrScanner
+            <Scanner
               onDecode={handleScan}
               onError={handleError}
               containerStyle={{ borderRadius: '0.5rem' }}

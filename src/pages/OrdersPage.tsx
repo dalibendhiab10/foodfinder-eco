@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Package, Check, X, ArrowRight } from 'lucide-react';
+import { Clock, Package, Check, X, ArrowRight, Utensils, Truck, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -14,9 +14,10 @@ interface Order {
   id: string;
   created_at: string;
   total: number;
-  status: 'pending' | 'preparing' | 'delivering' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'preparing' | 'on_the_way' | 'pick_up' | 'completed' | 'delivered' | 'cancelled';
   restaurant_name?: string;
   items_count: number;
+  order_type?: string;
 }
 
 const OrdersPage = () => {
@@ -37,6 +38,7 @@ const OrdersPage = () => {
             created_at,
             total,
             status,
+            order_type,
             order_items!inner (count)
           `)
           .eq('user_id', user.id)
@@ -50,10 +52,31 @@ const OrdersPage = () => {
           created_at: order.created_at,
           total: order.total,
           status: order.status,
+          order_type: order.order_type,
           items_count: order.order_items[0]?.count || 0
         }));
 
         setOrders(formattedOrders);
+        
+        // Set up real-time subscription for order updates
+        const channel = supabase
+          .channel('public:orders')
+          .on('postgres_changes', 
+            { 
+              event: '*', 
+              schema: 'public', 
+              table: 'orders',
+              filter: `user_id=eq.${user.id}`
+            }, 
+            () => {
+              fetchOrders();
+            }
+          )
+          .subscribe();
+          
+        return () => {
+          supabase.removeChannel(channel);
+        };
       } catch (error: any) {
         toast({
           variant: 'destructive',
@@ -71,11 +94,16 @@ const OrdersPage = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
+      case 'confirmed':
         return <Clock className="h-5 w-5" />;
       case 'preparing':
-      case 'delivering':
-        return <Package className="h-5 w-5" />;
+        return <Utensils className="h-5 w-5" />;
+      case 'on_the_way':
+        return <Truck className="h-5 w-5" />;
+      case 'pick_up':
+        return <ShoppingBag className="h-5 w-5" />;
       case 'completed':
+      case 'delivered':
         return <Check className="h-5 w-5" />;
       case 'cancelled':
         return <X className="h-5 w-5" />;
@@ -88,10 +116,15 @@ const OrdersPage = () => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'preparing':
-      case 'delivering':
+      case 'confirmed':
         return 'bg-blue-100 text-blue-800';
+      case 'preparing':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'on_the_way':
+      case 'pick_up':
+        return 'bg-purple-100 text-purple-800';
       case 'completed':
+      case 'delivered':
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
@@ -161,6 +194,11 @@ const OrdersPage = () => {
                   <div className="text-sm text-muted-foreground">
                     {format(new Date(order.created_at), 'MMM d, yyyy · h:mm a')}
                   </div>
+                  {order.order_type && (
+                    <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-800 border-0">
+                      {order.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}
+                    </Badge>
+                  )}
                 </div>
                 <Badge 
                   variant="outline" 
@@ -168,7 +206,7 @@ const OrdersPage = () => {
                 >
                   <span className="flex items-center gap-1">
                     {getStatusIcon(order.status)}
-                    {order.status}
+                    {order.status.replace('_', ' ')}
                   </span>
                 </Badge>
               </div>

@@ -3,80 +3,90 @@ import { useState, useEffect } from "react";
 import { Bell, Check, ShoppingBag, CreditCard, MapPin } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  timestamp: Date;
-  isRead: boolean;
+  created_at: string;
+  is_read: boolean;
   type: 'order' | 'promotion' | 'delivery' | 'payment' | 'system';
 }
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Mock data for notifications
-    const mockNotifications: Notification[] = [
-      {
-        id: "1",
-        title: "Order Confirmed",
-        message: "Your order #12345 has been confirmed and is being prepared.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        isRead: false,
-        type: 'order'
-      },
-      {
-        id: "2",
-        title: "Weekly Discount",
-        message: "Enjoy 20% off on all eco-friendly restaurants this weekend!",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        isRead: false,
-        type: 'promotion'
-      },
-      {
-        id: "3",
-        title: "Delivery Update",
-        message: "Your food is on the way! Estimated delivery time: 15 minutes.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-        isRead: true,
-        type: 'delivery'
-      },
-      {
-        id: "4",
-        title: "Payment Successful",
-        message: "Your payment of $24.99 for order #12344 was successful.",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        isRead: true,
-        type: 'payment'
-      },
-      {
-        id: "5",
-        title: "New Restaurant Added",
-        message: "GreenEats has joined our platform with sustainable food options!",
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-        isRead: true,
-        type: 'system'
+    const fetchNotifications = async () => {
+      if (!user) {
+        setNotifications([]);
+        setIsLoading(false);
+        return;
       }
-    ];
 
-    setNotifications(mockNotifications);
-  }, []);
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, isRead: true } 
-          : notification
-      )
-    );
-    toast({
-      title: "Notification marked as read",
-      duration: 1500,
-    });
+        if (error) throw error;
+        
+        setNotifications(data || []);
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to load notifications',
+          description: 'Please try again later',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [user, toast]);
+
+  const markAsRead = async (id: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === id 
+            ? { ...notification, is_read: true } 
+            : notification
+        )
+      );
+      
+      toast({
+        title: "Notification marked as read",
+        duration: 1500,
+      });
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to update notification',
+        description: 'Please try again later',
+      });
+    }
   };
 
   const getNotificationIcon = (type: string) => {
@@ -89,9 +99,10 @@ const NotificationPage = () => {
     }
   };
 
-  const formatTimestamp = (timestamp: Date) => {
+  const formatTimestamp = (timestamp: string) => {
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60));
+    const notificationDate = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - notificationDate.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 60) {
       return `${diffInMinutes} min ago`;
@@ -101,6 +112,34 @@ const NotificationPage = () => {
       return `${Math.floor(diffInMinutes / 1440)} day${Math.floor(diffInMinutes / 1440) > 1 ? 's' : ''} ago`;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-16">
+        <div className="p-4 bg-background sticky top-0 z-50 border-b">
+          <h1 className="text-2xl font-bold">Notifications</h1>
+        </div>
+        
+        <div className="p-4">
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse p-4 rounded-lg border">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 bg-muted rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-full"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-16">
@@ -114,7 +153,7 @@ const NotificationPage = () => {
             {notifications.map((notification) => (
               <div 
                 key={notification.id} 
-                className={`p-4 rounded-lg border ${notification.isRead ? 'bg-background' : 'bg-eco-50 border-eco-200'}`}
+                className={`p-4 rounded-lg border ${notification.is_read ? 'bg-background' : 'bg-eco-50 border-eco-200'}`}
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
@@ -122,13 +161,13 @@ const NotificationPage = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
-                      <h3 className={`font-medium ${notification.isRead ? '' : 'font-semibold'}`}>{notification.title}</h3>
-                      <span className="text-xs text-muted-foreground">{formatTimestamp(notification.timestamp)}</span>
+                      <h3 className={`font-medium ${notification.is_read ? '' : 'font-semibold'}`}>{notification.title}</h3>
+                      <span className="text-xs text-muted-foreground">{formatTimestamp(notification.created_at)}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
                   </div>
                 </div>
-                {!notification.isRead && (
+                {!notification.is_read && (
                   <div className="mt-3 flex justify-end">
                     <button 
                       onClick={() => markAsRead(notification.id)} 

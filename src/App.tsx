@@ -22,6 +22,9 @@ import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import LoyaltyProgramPage from "./pages/LoyaltyProgramPage";
 import NotificationPage from "./pages/NotificationPage";
 import CartPage from "./pages/CartPage";
+import ScanQRPage from "./pages/ScanQRPage";
+import TableMenuPage from "./pages/TableMenuPage";
+import TableCheckoutPage from "./pages/TableCheckoutPage";
 import GuideScreen from "./components/GuideScreen";
 import { useEffect, useState } from "react";
 
@@ -104,6 +107,11 @@ const AppRoutes = () => {
       <Route path="/food/:id" element={<ProtectedRoute><FoodDetailPage /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
       <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+      
+      {/* Restaurant Table Ordering Routes */}
+      <Route path="/scan-qr" element={<ProtectedRoute><ScanQRPage /></ProtectedRoute>} />
+      <Route path="/restaurant/:restaurantId/table/:tableId/session/:sessionId" element={<ProtectedRoute><TableMenuPage /></ProtectedRoute>} />
+      <Route path="/restaurant/:restaurantId/table/:tableId/checkout/:sessionId" element={<ProtectedRoute><TableCheckoutPage /></ProtectedRoute>} />
       
       {/* Initial route */}
       <Route path="/initial" element={getInitialRoute()} />

@@ -1,38 +1,71 @@
 
-import { Home, MapPin, Search, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { Home, Search, Package, User, QrCode } from "lucide-react";
+import NotificationBell from "./NotificationBell";
+import CartButton from "./CartButton";
 
 const BottomNav = () => {
   const location = useLocation();
-  const path = location.pathname;
   
-  const navItems = [
-    { icon: Home, label: "Home", path: "/" },
-    { icon: MapPin, label: "Map", path: "/map" },
-    { icon: Search, label: "Search", path: "/search" },
-    { icon: User, label: "Profile", path: "/profile" },
-  ];
-
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t bg-background z-50">
-      <div className="flex justify-between items-center">
-        {navItems.map((item) => {
-          const isActive = path === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex flex-col items-center justify-center py-2 flex-1 ${
-                isActive ? "text-eco-500" : "text-muted-foreground"
-              }`}
-            >
-              <div className="relative">
-                <item.icon size={20} />
-              </div>
-              <span className="text-xs mt-1">{item.label}</span>
-            </Link>
-          );
-        })}
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t py-2 px-4 flex justify-between items-center z-50">
+      <Link
+        to="/"
+        className={`flex flex-col items-center justify-center p-2 ${
+          isActive("/") ? "text-primary" : "text-muted-foreground"
+        }`}
+      >
+        <Home className="w-5 h-5" />
+        <span className="text-xs mt-1">Home</span>
+      </Link>
+      
+      <Link
+        to="/search"
+        className={`flex flex-col items-center justify-center p-2 ${
+          isActive("/search") ? "text-primary" : "text-muted-foreground"
+        }`}
+      >
+        <Search className="w-5 h-5" />
+        <span className="text-xs mt-1">Search</span>
+      </Link>
+      
+      <Link
+        to="/scan-qr"
+        className={`flex flex-col items-center justify-center p-2 ${
+          isActive("/scan-qr") ? "text-primary" : "text-muted-foreground"
+        }`}
+      >
+        <QrCode className="w-5 h-5" />
+        <span className="text-xs mt-1">Scan QR</span>
+      </Link>
+      
+      <Link
+        to="/orders"
+        className={`flex flex-col items-center justify-center p-2 ${
+          isActive("/orders") ? "text-primary" : "text-muted-foreground"
+        }`}
+      >
+        <Package className="w-5 h-5" />
+        <span className="text-xs mt-1">Orders</span>
+      </Link>
+      
+      <Link
+        to="/profile"
+        className={`flex flex-col items-center justify-center p-2 ${
+          isActive("/profile") ? "text-primary" : "text-muted-foreground"
+        }`}
+      >
+        <User className="w-5 h-5" />
+        <span className="text-xs mt-1">Profile</span>
+      </Link>
+      
+      <div className="flex items-center space-x-3 absolute top-0 right-4 transform -translate-y-1/2 bg-background border rounded-full px-2 py-1">
+        <NotificationBell />
+        <CartButton />
       </div>
     </div>
   );

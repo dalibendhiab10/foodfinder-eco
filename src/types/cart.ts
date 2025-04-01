@@ -7,4 +7,7 @@ export interface CartItem {
   image?: string;
   restaurantId?: string;
   restaurantName?: string;
+  selectedModifiers?: any[];
+  specialInstructions?: string;
+  tableSessionId?: string;
 }

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface TableQRCodeProps {
   sessionCode: string;
@@ -30,11 +30,10 @@ const TableQRCode: React.FC<TableQRCodeProps> = ({
       <CardContent className="flex justify-center py-6">
         {qrValue && (
           <div className="border-8 border-white rounded-lg shadow-lg">
-            <QRCode 
+            <QRCodeSVG 
               value={qrValue} 
               size={200} 
-              level="H" 
-              renderAs="svg"
+              level="H"
             />
           </div>
         )}

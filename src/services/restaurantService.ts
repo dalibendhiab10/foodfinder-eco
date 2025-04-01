@@ -38,6 +38,11 @@ export const getRestaurantTableById = async (tableId: string): Promise<Restauran
   }
 };
 
+// Get a table by ID (alias for getRestaurantTableById to fix the import issue)
+export const getTableById = async (tableId: string): Promise<RestaurantTable | null> => {
+  return getRestaurantTableById(tableId);
+};
+
 // Create a table session
 export const createTableSession = async (tableId: string, restaurantId: string): Promise<TableSession | null> => {
   try {
@@ -182,5 +187,64 @@ export const endTableSession = async (sessionId: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error ending table session:', error);
     return false;
+  }
+};
+
+// Place a table order
+export const placeTableOrder = async (
+  sessionId: string,
+  items: any[],
+  userId: string,
+  restaurantId: string,
+  tableId: string
+): Promise<{success: boolean, orderId?: string}> => {
+  try {
+    // Calculate order totals
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.08; // 8% tax
+    const total = subtotal + tax;
+    
+    // Create the order
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        restaurant_table_id: tableId,
+        table_session_id: sessionId,
+        subtotal,
+        tax,
+        delivery_fee: 0,
+        total,
+        status: 'pending',
+        order_type: 'dine_in'
+      })
+      .select()
+      .single();
+    
+    if (orderError) throw orderError;
+    
+    // Insert order items
+    const orderItems = items.map(item => ({
+      order_id: orderData.id,
+      food_id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      unit_price: item.price,
+      restaurant_id: restaurantId,
+      special_instructions: item.specialInstructions || '',
+      selected_modifiers: item.selectedModifiers || [],
+      table_session_id: sessionId
+    }));
+    
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
+    
+    if (itemsError) throw itemsError;
+    
+    return { success: true, orderId: orderData.id };
+  } catch (error) {
+    console.error('Error placing table order:', error);
+    return { success: false };
   }
 };

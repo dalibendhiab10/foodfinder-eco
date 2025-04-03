@@ -9,12 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Package, Check, X, ArrowRight, Utensils, Truck, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { OrderStatus } from '@/types/database';
 
 interface Order {
   id: string;
   created_at: string;
   total: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'on_the_way' | 'pick_up' | 'completed' | 'delivered' | 'cancelled';
+  status: OrderStatus;
   restaurant_name?: string;
   items_count: number;
   order_type?: string;
@@ -31,7 +32,8 @@ const OrdersPage = () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
+        // First, get all orders
+        const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
           .select(`
             id,
@@ -39,24 +41,64 @@ const OrdersPage = () => {
             total,
             status,
             order_type,
-            order_items!inner (count)
+            restaurant_table_id,
+            subtotal
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (ordersError) throw ordersError;
+        
+        // If no orders, return empty array
+        if (!ordersData || ordersData.length === 0) {
+          setOrders([]);
+          setIsLoading(false);
+          return;
+        }
 
-        // Transform the data to match our interface
-        const formattedOrders = data.map(order => ({
-          id: order.id,
-          created_at: order.created_at,
-          total: order.total,
-          status: order.status,
-          order_type: order.order_type,
-          items_count: order.order_items[0]?.count || 0
-        }));
+        // Get the count of items for each order
+        const ordersWithItems = await Promise.all(
+          ordersData.map(async (order) => {
+            const { count, error: countError } = await supabase
+              .from('order_items')
+              .select('*', { count: 'exact', head: true })
+              .eq('order_id', order.id);
+              
+            if (countError) {
+              console.error('Error fetching order items count:', countError);
+              return {
+                ...order,
+                items_count: 0,
+                restaurant_name: 'Unknown Restaurant'
+              };
+            }
+            
+            // Get restaurant name for the first item in the order
+            const { data: itemData, error: itemError } = await supabase
+              .from('order_items')
+              .select(`
+                restaurant_id,
+                restaurants(name)
+              `)
+              .eq('order_id', order.id)
+              .limit(1)
+              .single();
+            
+            let restaurant_name = 'Unknown Restaurant';
+            
+            if (!itemError && itemData && itemData.restaurants) {
+              restaurant_name = itemData.restaurants.name;
+            }
+            
+            return {
+              ...order,
+              items_count: count || 0,
+              restaurant_name
+            };
+          })
+        );
 
-        setOrders(formattedOrders);
+        setOrders(ordersWithItems);
         
         // Set up real-time subscription for order updates
         const channel = supabase
@@ -78,6 +120,7 @@ const OrdersPage = () => {
           supabase.removeChannel(channel);
         };
       } catch (error: any) {
+        console.error('Error fetching orders:', error);
         toast({
           variant: 'destructive',
           title: 'Could not load orders',
@@ -91,7 +134,7 @@ const OrdersPage = () => {
     fetchOrders();
   }, [user, toast]);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
       case 'pending':
       case 'confirmed':
@@ -112,7 +155,7 @@ const OrdersPage = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: OrderStatus) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
@@ -194,6 +237,9 @@ const OrdersPage = () => {
                   <div className="text-sm text-muted-foreground">
                     {format(new Date(order.created_at), 'MMM d, yyyy · h:mm a')}
                   </div>
+                  {order.restaurant_name && (
+                    <div className="text-sm font-medium mt-1">{order.restaurant_name}</div>
+                  )}
                   {order.order_type && (
                     <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-800 border-0">
                       {order.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}

@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Loader2, Google, Apple } from 'lucide-react';
 
 type AuthMode = 'login' | 'register';
 
@@ -16,8 +17,22 @@ const AuthForm = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the intended destination from location state
+  const from = location.state?.from?.pathname || '/';
+
+  // Clear form on mode change
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    if (mode === 'login') {
+      setName('');
+    }
+  }, [mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,9 +53,14 @@ const AuthForm = () => {
           description: 'Welcome to FoodFinder Eco!',
         });
 
-        // Redirect to home page
-        navigate('/');
+        // Redirect to the previously intended destination or home
+        navigate(from);
       } else {
+        // Validate name
+        if (!name.trim()) {
+          throw new Error('Please enter your full name');
+        }
+        
         // Register with Supabase
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -54,6 +74,16 @@ const AuthForm = () => {
 
         if (error) throw error;
         
+        if (data.user?.identities?.length === 0) {
+          toast({
+            variant: 'destructive',
+            title: 'Email already registered',
+            description: 'This email is already registered. Please login instead.',
+          });
+          setMode('login');
+          return;
+        }
+        
         toast({
           title: 'Account created successfully',
           description: 'Welcome to FoodFinder Eco! Please check your email for verification.',
@@ -66,7 +96,7 @@ const AuthForm = () => {
         });
         
         if (!signInError) {
-          navigate('/');
+          navigate(from);
         }
       }
     } catch (error: any) {
@@ -82,6 +112,8 @@ const AuthForm = () => {
 
   const handleSocialAuth = async (provider: 'google' | 'apple') => {
     try {
+      setSocialLoading(provider);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -96,6 +128,7 @@ const AuthForm = () => {
         title: `${provider} Sign-in failed`,
         description: error.message || 'Please try again later.',
       });
+      setSocialLoading(null);
     }
   };
 
@@ -123,6 +156,7 @@ const AuthForm = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -139,10 +173,20 @@ const AuthForm = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
-            <Button type="submit" className="w-full bg-eco-500 hover:bg-eco-600" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button 
+              type="submit" 
+              className="w-full bg-eco-500 hover:bg-eco-600" 
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : 'Sign In'}
             </Button>
           </form>
         </TabsContent>
@@ -157,6 +201,7 @@ const AuthForm = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -168,6 +213,7 @@ const AuthForm = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -179,11 +225,21 @@ const AuthForm = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
                 minLength={6}
               />
             </div>
-            <Button type="submit" className="w-full bg-eco-500 hover:bg-eco-600" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create Account'}
+            <Button 
+              type="submit" 
+              className="w-full bg-eco-500 hover:bg-eco-600" 
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : 'Create Account'}
             </Button>
           </form>
         </TabsContent>
@@ -205,13 +261,25 @@ const AuthForm = () => {
           <Button 
             variant="outline" 
             onClick={() => handleSocialAuth('google')}
+            disabled={socialLoading !== null}
           >
+            {socialLoading === 'google' ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Google className="mr-2 h-4 w-4" />
+            )}
             Google
           </Button>
           <Button 
             variant="outline" 
             onClick={() => handleSocialAuth('apple')}
+            disabled={socialLoading !== null}
           >
+            {socialLoading === 'apple' ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Apple className="mr-2 h-4 w-4" />
+            )}
             Apple
           </Button>
         </div>

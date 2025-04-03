@@ -1,279 +1,168 @@
-
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import BottomNav from '@/components/BottomNav';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Clock, Package, Check, X, ArrowRight, Utensils, Truck, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { OrderStatus } from '@/types/database';
-
-interface Order {
-  id: string;
-  created_at: string;
-  total: number;
-  status: OrderStatus;
-  restaurant_name?: string;
-  items_count: number;
-  order_type?: string;
-}
+import { Loader2, ShoppingBag } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Order, OrderStatus } from '@/types/orders';
+import { format } from 'date-fns';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user) return;
-
       try {
-        // First, get all orders
-        const { data: ordersData, error: ordersError } = await supabase
-          .from('orders')
-          .select(`
-            id,
-            created_at,
-            total,
-            status,
-            order_type,
-            restaurant_table_id,
-            subtotal
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        if (!user) return;
 
-        if (ordersError) throw ordersError;
-        
-        // If no orders, return empty array
-        if (!ordersData || ordersData.length === 0) {
-          setOrders([]);
-          setIsLoading(false);
-          return;
-        }
+        // Query to get orders with restaurant name and count of items
+        const { data, error } = await supabase
+          .rpc('get_orders_with_details', {
+            user_id_param: user.id
+          });
 
-        // Get the count of items for each order
-        const ordersWithItems = await Promise.all(
-          ordersData.map(async (order) => {
-            const { count, error: countError } = await supabase
-              .from('order_items')
-              .select('*', { count: 'exact', head: true })
-              .eq('order_id', order.id);
-              
-            if (countError) {
-              console.error('Error fetching order items count:', countError);
-              return {
-                ...order,
-                items_count: 0,
-                restaurant_name: 'Unknown Restaurant'
-              };
-            }
-            
-            // Get restaurant name for the first item in the order
-            const { data: itemData, error: itemError } = await supabase
-              .from('order_items')
-              .select(`
-                restaurant_id,
-                restaurants(name)
-              `)
-              .eq('order_id', order.id)
-              .limit(1)
-              .single();
-            
-            let restaurant_name = 'Unknown Restaurant';
-            
-            if (!itemError && itemData && itemData.restaurants) {
-              restaurant_name = itemData.restaurants.name;
-            }
-            
-            return {
-              ...order,
-              items_count: count || 0,
-              restaurant_name
-            };
-          })
-        );
+        if (error) {
+          // Fallback to direct query if RPC is not available
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
 
-        setOrders(ordersWithItems);
-        
-        // Set up real-time subscription for order updates
-        const channel = supabase
-          .channel('public:orders')
-          .on('postgres_changes', 
-            { 
-              event: '*', 
-              schema: 'public', 
-              table: 'orders',
-              filter: `user_id=eq.${user.id}`
-            }, 
-            () => {
-              fetchOrders();
-            }
-          )
-          .subscribe();
+          if (fallbackError) throw fallbackError;
           
-        return () => {
-          supabase.removeChannel(channel);
-        };
+          // Type casting for fallback data
+          const typedFallbackData = fallbackData.map(order => ({
+            ...order,
+            status: order.status as OrderStatus,
+            order_type: order.order_type as 'delivery' | 'pickup' | 'dine_in'
+          }));
+          
+          setOrders(typedFallbackData);
+        } else {
+          // Process RPC results
+          // Type casting to ensure correct types
+          const typedData = data.map(order => ({
+            ...order,
+            status: order.status as OrderStatus,
+            order_type: order.order_type as 'delivery' | 'pickup' | 'dine_in'
+          }));
+          
+          setOrders(typedData);
+        }
       } catch (error: any) {
         console.error('Error fetching orders:', error);
         toast({
           variant: 'destructive',
-          title: 'Could not load orders',
-          description: error.message
+          title: 'Failed to load orders',
+          description: error.message || 'Please try again later',
         });
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchOrders();
   }, [user, toast]);
 
-  const getStatusIcon = (status: OrderStatus) => {
+  const renderOrderStatus = (status: OrderStatus) => {
     switch (status) {
       case 'pending':
+        return <span className="text-gray-500">Pending</span>;
       case 'confirmed':
-        return <Clock className="h-5 w-5" />;
+        return <span className="text-blue-500">Confirmed</span>;
       case 'preparing':
-        return <Utensils className="h-5 w-5" />;
+        return <span className="text-yellow-500">Preparing</span>;
       case 'on_the_way':
-        return <Truck className="h-5 w-5" />;
+        return <span className="text-purple-500">On the way</span>;
       case 'pick_up':
-        return <ShoppingBag className="h-5 w-5" />;
+        return <span className="text-orange-500">Ready for Pickup</span>;
       case 'completed':
+        return <span className="text-green-500">Completed</span>;
       case 'delivered':
-        return <Check className="h-5 w-5" />;
+        return <span className="text-green-500">Delivered</span>;
       case 'cancelled':
-        return <X className="h-5 w-5" />;
+        return <span className="text-red-500">Cancelled</span>;
       default:
-        return <Clock className="h-5 w-5" />;
+        return <span className="text-gray-500">Unknown</span>;
     }
   };
-
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'preparing':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'on_the_way':
-      case 'pick_up':
-        return 'bg-purple-100 text-purple-800';
-      case 'completed':
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pb-16">
-        <div className="p-4 bg-background sticky top-0 z-10 border-b">
-          <h1 className="text-2xl font-bold">My Orders</h1>
-        </div>
-        
-        <div className="flex justify-center items-center h-[80vh]">
-          <div className="animate-pulse space-y-4 w-full max-w-md">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-32 bg-muted rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-        
-        <BottomNav />
-      </div>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <div className="min-h-screen pb-16">
-        <div className="p-4 bg-background sticky top-0 z-10 border-b">
-          <h1 className="text-2xl font-bold">My Orders</h1>
-        </div>
-        
-        <div className="flex flex-col items-center justify-center p-8 h-[70vh]">
-          <Package className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No orders yet</h2>
-          <p className="text-muted-foreground text-center mb-6">When you place orders, they will appear here</p>
-          <Button asChild>
-            <Link to="/">Browse Restaurants</Link>
-          </Button>
-        </div>
-        
-        <BottomNav />
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen pb-16">
-      <div className="p-4 bg-background sticky top-0 z-10 border-b">
-        <h1 className="text-2xl font-bold">My Orders</h1>
-      </div>
-      
-      <div className="p-4">
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <Link 
-              key={order.id} 
-              to={`/orders/${order.id}`}
-              className="block border rounded-lg p-4 bg-background hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <div className="font-medium">Order #{order.id.substring(0, 8)}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {format(new Date(order.created_at), 'MMM d, yyyy · h:mm a')}
-                  </div>
-                  {order.restaurant_name && (
-                    <div className="text-sm font-medium mt-1">{order.restaurant_name}</div>
-                  )}
-                  {order.order_type && (
-                    <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-800 border-0">
-                      {order.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}
-                    </Badge>
-                  )}
-                </div>
-                <Badge 
-                  variant="outline" 
-                  className={`${getStatusColor(order.status)} border-0 capitalize`}
-                >
-                  <span className="flex items-center gap-1">
-                    {getStatusIcon(order.status)}
-                    {order.status.replace('_', ' ')}
-                  </span>
-                </Badge>
-              </div>
-              
-              <div className="mt-3 flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-muted-foreground">
-                    {order.items_count} {order.items_count === 1 ? 'item' : 'items'}
-                  </div>
-                  <div className="font-semibold">${order.total.toFixed(2)}</div>
-                </div>
-                <div className="text-eco-500">
-                  <ArrowRight size={18} />
-                </div>
-              </div>
-            </Link>
-          ))}
+    <div className="container mx-auto mt-8">
+      <h1 className="text-2xl font-bold mb-4">My Orders</h1>
+      {loading ? (
+        <div className="flex justify-center items-center">
+          <Loader2 className="h-6 w-6 animate-spin" />
         </div>
-      </div>
-      
-      <BottomNav />
+      ) : orders.length === 0 ? (
+        <div className="text-center">
+          <ShoppingBag className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+          <p className="text-gray-500">No orders yet.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full leading-normal">
+            <thead>
+              <tr>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Order ID
+                </th>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Total
+                </th>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Items
+                </th>
+                <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.id}>
+                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">{order.id}</p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {format(new Date(order.created_at), 'MMM dd, yyyy')}
+                    </p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    {renderOrderStatus(order.status)}
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      ${order.total.toFixed(2)}
+                    </p>
+                  </td>
+                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <p className="text-gray-900 whitespace-no-wrap">
+                      {order.items_count}
+                    </p>
+                  </td>
+                  <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                    <Link to={`/orders/${order.id}`} className="text-indigo-600 hover:text-indigo-900">
+                      View Details
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

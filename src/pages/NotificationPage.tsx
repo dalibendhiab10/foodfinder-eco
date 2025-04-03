@@ -1,36 +1,22 @@
-
-import { useState, useEffect } from "react";
-import { Bell, Check, ShoppingBag, CreditCard, MapPin } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  is_read: boolean;
-  type: 'order' | 'promotion' | 'delivery' | 'payment' | 'system';
-}
+import { useState, useEffect } from 'react';
+import { Notification, NotificationType } from '@/types/notifications';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { BellRing, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      if (!user) {
-        setNotifications([]);
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        setIsLoading(true);
+        if (!user) return;
+
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
@@ -38,24 +24,29 @@ const NotificationPage = () => {
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        
-        setNotifications(data || []);
-      } catch (err) {
-        console.error('Error fetching notifications:', err);
+
+        const typedData = data.map(item => ({
+          ...item,
+          type: item.type as NotificationType
+        }));
+
+        setNotifications(typedData);
+      } catch (error: any) {
+        console.error('Error fetching notifications:', error);
         toast({
           variant: 'destructive',
           title: 'Failed to load notifications',
-          description: 'Please try again later',
+          description: error.message || 'Please try again later',
         });
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchNotifications();
   }, [user, toast]);
 
-  const markAsRead = async (id: string) => {
+  const handleMarkAsRead = async (id: string) => {
     if (!user) return;
     
     try {
@@ -113,7 +104,7 @@ const NotificationPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen pb-16">
         <div className="p-4 bg-background sticky top-0 z-50 border-b">
@@ -170,10 +161,10 @@ const NotificationPage = () => {
                 {!notification.is_read && (
                   <div className="mt-3 flex justify-end">
                     <button 
-                      onClick={() => markAsRead(notification.id)} 
+                      onClick={() => handleMarkAsRead(notification.id)} 
                       className="flex items-center text-xs text-eco-600 gap-1 hover:text-eco-700"
                     >
-                      <Check size={14} />
+                      <CheckCircle size={14} />
                       Mark as read
                     </button>
                   </div>
@@ -183,7 +174,7 @@ const NotificationPage = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Bell className="mx-auto text-muted-foreground mb-3" size={48} />
+            <BellRing className="mx-auto text-muted-foreground mb-3" size={48} />
             <h3 className="text-lg font-medium">No notifications yet</h3>
             <p className="text-muted-foreground">We'll notify you when something important happens</p>
           </div>

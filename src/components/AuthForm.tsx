@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, Google, Apple } from 'lucide-react';
+import { Loader2, Mail, AppleIcon } from 'lucide-react';
 
 type AuthMode = 'login' | 'register';
 
@@ -22,10 +21,8 @@ const AuthForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get the intended destination from location state
   const from = location.state?.from?.pathname || '/';
 
-  // Clear form on mode change
   useEffect(() => {
     setEmail('');
     setPassword('');
@@ -40,7 +37,6 @@ const AuthForm = () => {
 
     try {
       if (mode === 'login') {
-        // Sign in with Supabase
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -53,15 +49,12 @@ const AuthForm = () => {
           description: 'Welcome to FoodFinder Eco!',
         });
 
-        // Redirect to the previously intended destination or home
         navigate(from);
       } else {
-        // Validate name
         if (!name.trim()) {
           throw new Error('Please enter your full name');
         }
         
-        // Register with Supabase
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -89,7 +82,6 @@ const AuthForm = () => {
           description: 'Welcome to FoodFinder Eco! Please check your email for verification.',
         });
         
-        // For demo purposes, auto-sign in after registration
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -266,7 +258,7 @@ const AuthForm = () => {
             {socialLoading === 'google' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Google className="mr-2 h-4 w-4" />
+              <Mail className="mr-2 h-4 w-4" />
             )}
             Google
           </Button>
@@ -278,7 +270,7 @@ const AuthForm = () => {
             {socialLoading === 'apple' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Apple className="mr-2 h-4 w-4" />
+              <AppleIcon className="mr-2 h-4 w-4" />
             )}
             Apple
           </Button>

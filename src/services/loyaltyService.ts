@@ -9,7 +9,7 @@ export interface LoyaltyLevel {
 }
 
 export interface LoyaltyReward {
-  id: number;
+  id: string;
   name: string;
   description: string;
   points: number;
@@ -27,56 +27,78 @@ export interface UserLoyaltyProfile {
   ecoLevel: string;
 }
 
-// Define our loyalty levels
-export const getLoyaltyLevels = (): LoyaltyLevel[] => [
-  { 
-    name: 'Eco Novice', 
-    points: 0, 
-    icon: null, // Will be set in component
-    benefits: 'Starting level'
-  },
-  { 
-    name: 'Earth Protector', 
-    points: 1000, 
-    icon: null,
-    benefits: '5% discount on orders' 
-  },
-  { 
-    name: 'Green Guardian', 
-    points: 2500, 
-    icon: null,
-    benefits: '10% discount & priority pickup'
-  },
-  { 
-    name: 'Eco Champion', 
-    points: 5000, 
-    icon: null,
-    benefits: '15% discount & exclusive offers'
-  },
-  { 
-    name: 'Food Waste Hero', 
-    points: 10000, 
-    icon: null,
-    benefits: '20% discount & VIP benefits'
-  },
-];
+// Get loyalty levels from Supabase
+export const getLoyaltyLevels = async (): Promise<LoyaltyLevel[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('loyalty_levels')
+      .select('*')
+      .order('points', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching loyalty levels:', error);
+      return [];
+    }
+    
+    return data.map(level => ({
+      name: level.name,
+      points: level.points,
+      icon: null, // Will be set in component
+      benefits: level.benefits
+    }));
+  } catch (error) {
+    console.error('Error in getLoyaltyLevels:', error);
+    return [];
+  }
+};
 
-// Define available rewards
-export const getAvailableRewards = (): LoyaltyReward[] => [
-  { id: 1, name: '10% Discount', description: 'Get 10% off on your next order', points: 500, icon: '🎁' },
-  { id: 2, name: 'Free Delivery', description: 'Free delivery on your next order', points: 800, icon: '🚚' },
-  { id: 3, name: 'Exclusive Box', description: 'Special surprise eco box', points: 1500, icon: '📦' },
-  { id: 4, name: 'Plant a Tree', description: 'We plant a tree in your name', points: 2000, icon: '🌳' },
-];
+// Get available rewards from Supabase
+export const getAvailableRewards = async (): Promise<LoyaltyReward[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('loyalty_rewards')
+      .select('*')
+      .order('points', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching loyalty rewards:', error);
+      return [];
+    }
+    
+    return data.map(reward => ({
+      id: reward.id,
+      name: reward.name,
+      description: reward.description,
+      points: reward.points,
+      icon: reward.icon
+    }));
+  } catch (error) {
+    console.error('Error in getAvailableRewards:', error);
+    return [];
+  }
+};
 
-// Define point earning actions
-export const getPointEarningActions = (): PointEarningAction[] => [
-  { action: "Save food from waste", points: "50-100 points" },
-  { action: "Complete 5 orders", points: "250 points" },
-  { action: "Share on social media", points: "100 points" },
-  { action: "Refer a friend", points: "500 points" },
-  { action: "Use reusable bags", points: "50 points" },
-];
+// Get point earning actions from Supabase
+export const getPointEarningActions = async (): Promise<PointEarningAction[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('point_earning_actions')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching point earning actions:', error);
+      return [];
+    }
+    
+    return data.map(action => ({
+      action: action.action,
+      points: action.points
+    }));
+  } catch (error) {
+    console.error('Error in getPointEarningActions:', error);
+    return [];
+  }
+};
 
 // Get user loyalty profile
 export const getUserLoyaltyProfile = async (userId: string): Promise<UserLoyaltyProfile | null> => {
@@ -133,7 +155,7 @@ export const getUserLoyaltyProfile = async (userId: string): Promise<UserLoyalty
 // Redeem a reward
 export const redeemReward = async (
   userId: string, 
-  rewardId: number, 
+  rewardId: string, 
   pointCost: number
 ): Promise<{ success: boolean; message: string }> => {
   try {

@@ -15,37 +15,64 @@ import {
   getPointEarningActions,
   redeemReward,
   LoyaltyLevel,
-  UserLoyaltyProfile
+  UserLoyaltyProfile,
+  LoyaltyReward,
+  PointEarningAction
 } from '@/services/loyaltyService';
 
 const LoyaltyProgramPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<UserLoyaltyProfile | null>(null);
+  const [loyaltyLevels, setLoyaltyLevels] = useState<LoyaltyLevel[]>([]);
+  const [availableRewards, setAvailableRewards] = useState<LoyaltyReward[]>([]);
+  const [pointEarningActions, setPointEarningActions] = useState<PointEarningAction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [redeeming, setRedeeming] = useState<number | null>(null);
+  const [redeeming, setRedeeming] = useState<string | null>(null);
   
-  // Get our data from the service
-  const loyaltyLevels = getLoyaltyLevels().map(level => {
-    // Add icons to our levels
-    if (level.name === 'Eco Novice' || level.name === 'Earth Protector') {
-      return { ...level, icon: <Leaf className="text-eco-500" size={24} /> };
-    } else if (level.name === 'Green Guardian') {
-      return { ...level, icon: <Award className="text-eco-600" size={24} /> };
-    } else {
-      return { ...level, icon: <Trophy className="text-eco-700" size={24} /> };
-    }
-  });
-  
-  const availableRewards = getAvailableRewards();
-  const pointEarningActions = getPointEarningActions();
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch all data in parallel
+        const [levels, rewards, actions] = await Promise.all([
+          getLoyaltyLevels(),
+          getAvailableRewards(),
+          getPointEarningActions()
+        ]);
+
+        // Add icons to levels
+        const levelsWithIcons = levels.map(level => {
+          if (level.name === 'Eco Novice' || level.name === 'Earth Protector') {
+            return { ...level, icon: <Leaf className="text-eco-500" size={24} /> };
+          } else if (level.name === 'Green Guardian') {
+            return { ...level, icon: <Award className="text-eco-600" size={24} /> };
+          } else {
+            return { ...level, icon: <Trophy className="text-eco-700" size={24} /> };
+          }
+        });
+        
+        setLoyaltyLevels(levelsWithIcons);
+        setAvailableRewards(rewards);
+        setPointEarningActions(actions);
+      } catch (error) {
+        console.error('Error fetching loyalty data:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to load loyalty data',
+          description: 'Please try again later.',
+        });
+      }
+    };
+    
+    fetchData();
+  }, [toast]);
   
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user) return;
       
       try {
-        setLoading(true);
         const profile = await getUserLoyaltyProfile(user.id);
         setUserProfile(profile);
       } catch (error) {
@@ -71,6 +98,20 @@ const LoyaltyProgramPage = () => {
     pointsToNextLevel: number;
   } => {
     const ecoPoints = userProfile?.ecoPoints || 0;
+    
+    if (loyaltyLevels.length === 0) {
+      return {
+        currentLevel: {
+          name: 'Eco Novice',
+          points: 0,
+          icon: <Leaf className="text-eco-500" size={24} />,
+          benefits: 'Starting level'
+        },
+        nextLevel: null,
+        progressPercentage: 0,
+        pointsToNextLevel: 0
+      };
+    }
     
     // Find current level
     const userLevelIndex = loyaltyLevels.findIndex(
@@ -105,7 +146,7 @@ const LoyaltyProgramPage = () => {
     };
   };
   
-  const handleRedeemReward = async (reward) => {
+  const handleRedeemReward = async (reward: LoyaltyReward) => {
     if (!user || !userProfile) return;
     
     if (userProfile.ecoPoints < reward.points) {
@@ -210,39 +251,43 @@ const LoyaltyProgramPage = () => {
             </h2>
             
             <div className="space-y-3">
-              {availableRewards.map((reward) => (
-                <div 
-                  key={reward.id} 
-                  className={`flex justify-between items-center p-3 border rounded-lg ${
-                    (userProfile?.ecoPoints || 0) >= reward.points 
-                      ? 'border-eco-200' 
-                      : 'border-gray-200 opacity-70'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">{reward.icon}</div>
-                    <div>
-                      <p className="font-medium">{reward.name}</p>
-                      <p className="text-sm text-muted-foreground">{reward.description}</p>
+              {availableRewards.length === 0 ? (
+                <p className="text-muted-foreground text-center py-2">No rewards available</p>
+              ) : (
+                availableRewards.map((reward) => (
+                  <div 
+                    key={reward.id} 
+                    className={`flex justify-between items-center p-3 border rounded-lg ${
+                      (userProfile?.ecoPoints || 0) >= reward.points 
+                        ? 'border-eco-200' 
+                        : 'border-gray-200 opacity-70'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">{reward.icon}</div>
+                      <div>
+                        <p className="font-medium">{reward.name}</p>
+                        <p className="text-sm text-muted-foreground">{reward.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-sm font-medium text-eco-600">{reward.points} pts</span>
+                      <Button 
+                        size="sm" 
+                        variant={(userProfile?.ecoPoints || 0) >= reward.points ? "default" : "outline"}
+                        className={(userProfile?.ecoPoints || 0) >= reward.points ? "bg-eco-500 hover:bg-eco-600" : ""}
+                        onClick={() => handleRedeemReward(reward)}
+                        disabled={redeeming === reward.id}
+                      >
+                        {redeeming === reward.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : null}
+                        Redeem
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-sm font-medium text-eco-600">{reward.points} pts</span>
-                    <Button 
-                      size="sm" 
-                      variant={(userProfile?.ecoPoints || 0) >= reward.points ? "default" : "outline"}
-                      className={(userProfile?.ecoPoints || 0) >= reward.points ? "bg-eco-500 hover:bg-eco-600" : ""}
-                      onClick={() => handleRedeemReward(reward)}
-                      disabled={redeeming === reward.id}
-                    >
-                      {redeeming === reward.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                      ) : null}
-                      Redeem
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -255,36 +300,40 @@ const LoyaltyProgramPage = () => {
             </h2>
             
             <div className="space-y-3">
-              {loyaltyLevels.map((level, index) => {
-                const isCurrentLevel = currentLevel.name === level.name;
-                
-                return (
-                  <div 
-                    key={index} 
-                    className={`flex items-center gap-3 p-3 border rounded-lg ${
-                      isCurrentLevel ? 'border-eco-500 bg-eco-50' : 'border-gray-100'
-                    }`}
-                  >
-                    <div>
-                      {level.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <p className="font-medium">{level.name}</p>
-                        <p className="text-sm font-medium">{level.points} pts</p>
+              {loyaltyLevels.length === 0 ? (
+                <p className="text-muted-foreground text-center py-2">No loyalty levels available</p>
+              ) : (
+                loyaltyLevels.map((level, index) => {
+                  const isCurrentLevel = currentLevel?.name === level.name;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`flex items-center gap-3 p-3 border rounded-lg ${
+                        isCurrentLevel ? 'border-eco-500 bg-eco-50' : 'border-gray-100'
+                      }`}
+                    >
+                      <div>
+                        {level.icon}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {level.benefits}
-                      </p>
-                    </div>
-                    {isCurrentLevel && (
-                      <div className="h-6 w-6 rounded-full bg-eco-500 flex items-center justify-center">
-                        <Award size={14} className="text-white" />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <p className="font-medium">{level.name}</p>
+                          <p className="text-sm font-medium">{level.points} pts</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {level.benefits}
+                        </p>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {isCurrentLevel && (
+                        <div className="h-6 w-6 rounded-full bg-eco-500 flex items-center justify-center">
+                          <Award size={14} className="text-white" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
@@ -297,12 +346,16 @@ const LoyaltyProgramPage = () => {
             </h2>
             
             <div className="space-y-2">
-              {pointEarningActions.map((item, index) => (
-                <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
-                  <span>{item.action}</span>
-                  <span className="font-medium text-eco-600">{item.points}</span>
-                </div>
-              ))}
+              {pointEarningActions.length === 0 ? (
+                <p className="text-muted-foreground text-center py-2">No earning actions available</p>
+              ) : (
+                pointEarningActions.map((item, index) => (
+                  <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
+                    <span>{item.action}</span>
+                    <span className="font-medium text-eco-600">{item.points}</span>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

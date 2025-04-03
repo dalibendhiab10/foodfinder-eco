@@ -1,19 +1,41 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
-import { User, Settings, Heart, Star, CreditCard, LogOut, Edit, Award, Gift, ChevronRight, Leaf } from 'lucide-react'; // Added Award, Gift, ChevronRight, Leaf
+import { User, Settings, Heart, Star, CreditCard, LogOut, Award, Gift, ChevronRight, Leaf, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Separator } from '@/components/ui/separator'; // Keep Separator
-import { Card, CardContent } from '@/components/ui/card'; // Import Card for menu styling
-import { Progress } from '@/components/ui/progress'; // Added Progress
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { getUserLoyaltyProfile } from '@/services/loyaltyService';
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ ecoPoints: number, ecoLevel: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user loyalty profile
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const profile = await getUserLoyaltyProfile(user.id);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -92,11 +114,12 @@ const ProfilePage = () => {
               {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
             </h2>
             <p className="text-white/70">{user?.email}</p>
-            {/* You can re-add Eco Level here if data is available */}
-            {/* <div className="flex items-center mt-1">
-              <Leaf size={16} className="mr-1" />
-              <span className="text-sm">Eco Level Placeholder</span>
-            </div> */}
+            {!loading && userProfile && (
+              <div className="flex items-center mt-1">
+                <Leaf size={16} className="mr-1" />
+                <span className="text-sm">{userProfile.ecoLevel}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -110,33 +133,38 @@ const ProfilePage = () => {
               <Award size={20} className="text-eco-500" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center p-3 bg-eco-50 rounded-lg">
-                {/* Placeholder Data */}
-                <p className="text-3xl font-bold text-eco-600">0</p>
-                <p className="text-sm text-muted-foreground">kg food saved</p>
+            {loading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-eco-500" />
               </div>
-              <div className="text-center p-3 bg-eco-50 rounded-lg">
-                {/* Placeholder Data */}
-                <p className="text-3xl font-bold text-eco-600">0</p>
-                <p className="text-sm text-muted-foreground">kg CO₂ reduced</p>
-              </div>
-            </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-3 bg-eco-50 rounded-lg">
+                    {/* Placeholder Data */}
+                    <p className="text-3xl font-bold text-eco-600">0</p>
+                    <p className="text-sm text-muted-foreground">kg food saved</p>
+                  </div>
+                  <div className="text-center p-3 bg-eco-50 rounded-lg">
+                    {/* Placeholder Data */}
+                    <p className="text-3xl font-bold text-eco-600">0</p>
+                    <p className="text-sm text-muted-foreground">kg CO₂ reduced</p>
+                  </div>
+                </div>
 
-            <div className="mb-2">
-              <div className="flex justify-between text-sm mb-1">
-                <span>Eco Points</span>
-                 {/* Placeholder Data */}
-                <span className="font-medium">0</span>
-              </div>
-               {/* Placeholder Data */}
-              <Progress value={0} className="h-2 bg-eco-100" />
-            </div>
+                <div className="mb-2">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Eco Points</span>
+                    <span className="font-medium">{userProfile?.ecoPoints || 0}</span>
+                  </div>
+                  <Progress value={userProfile?.ecoPoints ? Math.min(userProfile.ecoPoints / 100, 100) : 0} className="h-2 bg-eco-100" />
+                </div>
 
-            <p className="text-xs text-muted-foreground mb-3">
-              {/* Placeholder Text */}
-              Earn points to reach the next level!
-            </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Earn points to reach the next level!
+                </p>
+              </>
+            )}
 
             <Link to="/loyalty">
               <Button className="w-full flex justify-between bg-eco-500 hover:bg-eco-600">
@@ -180,4 +208,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-

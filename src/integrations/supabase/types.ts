@@ -166,6 +166,57 @@ export type Database = {
           },
         ]
       }
+      loyalty_levels: {
+        Row: {
+          benefits: string
+          created_at: string
+          id: string
+          name: string
+          points: number
+        }
+        Insert: {
+          benefits: string
+          created_at?: string
+          id?: string
+          name: string
+          points: number
+        }
+        Update: {
+          benefits?: string
+          created_at?: string
+          id?: string
+          name?: string
+          points?: number
+        }
+        Relationships: []
+      }
+      loyalty_rewards: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          points: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          name: string
+          points: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          points?: number
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
@@ -364,6 +415,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      point_earning_actions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          points: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          points: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          points?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          eco_level: string
+          eco_points: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          eco_level?: string
+          eco_points?: number
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          eco_level?: string
+          eco_points?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       restaurant_tables: {
         Row: {

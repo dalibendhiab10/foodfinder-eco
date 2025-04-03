@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, Mail, AppleIcon } from 'lucide-react';
+import { Loader2, Mail, Apple } from 'lucide-react';
 
 type AuthMode = 'login' | 'register';
 
@@ -270,7 +271,7 @@ const AuthForm = () => {
             {socialLoading === 'apple' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <AppleIcon className="mr-2 h-4 w-4" />
+              <Apple className="mr-2 h-4 w-4" />
             )}
             Apple
           </Button>

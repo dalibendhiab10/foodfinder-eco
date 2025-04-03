@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { Notification, NotificationType } from '@/types/notifications';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { BellRing, CheckCircle } from 'lucide-react';
+import { BellRing, CheckCircle, Bell, ShoppingCart, MapPin, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -82,7 +83,7 @@ const NotificationPage = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'order': return <ShoppingBag className="text-eco-500" />;
+      case 'order': return <ShoppingCart className="text-eco-500" />;
       case 'promotion': return <Bell className="text-amber-500" />;
       case 'delivery': return <MapPin className="text-blue-500" />;
       case 'payment': return <CreditCard className="text-purple-500" />;
@@ -126,8 +127,6 @@ const NotificationPage = () => {
             ))}
           </div>
         </div>
-        
-        <BottomNav />
       </div>
     );
   }
@@ -180,8 +179,6 @@ const NotificationPage = () => {
           </div>
         )}
       </div>
-      
-      <BottomNav />
     </div>
   );
 };

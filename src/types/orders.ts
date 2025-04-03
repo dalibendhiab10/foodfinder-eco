@@ -1,6 +1,4 @@
 
-import { Json } from './database';
-
 export type OrderStatus = 
   | 'pending' 
   | 'confirmed' 

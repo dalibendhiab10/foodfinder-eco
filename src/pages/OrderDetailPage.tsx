@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,12 +54,16 @@ const OrderDetailPage = () => {
 
         if (itemsError) throw itemsError;
         
-        // Transform the selected_modifiers to be an array
-        const typedItems = itemsData.map(item => ({
+        // Transform the selected_modifiers to be an array and ensure proper typing
+        const typedItems: OrderItem[] = itemsData.map(item => ({
           ...item,
           selected_modifiers: Array.isArray(item.selected_modifiers) 
             ? item.selected_modifiers 
-            : [] // Use empty array as fallback
+            : [], // Use empty array as fallback
+          restaurants: item.restaurants ? {
+            name: item.restaurants.name || '',
+            logo_url: item.restaurants.logo_url || ''
+          } : undefined
         }));
         
         setOrderItems(typedItems);

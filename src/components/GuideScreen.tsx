@@ -1,14 +1,19 @@
+import React from 'react';
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, MapPin, ShoppingBag, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import PlaceholderSvg1 from "./svgs/PlaceholderSvg1";
+import PlaceholderSvg2 from "./svgs/PlaceholderSvg2";
+import PlaceholderSvg3 from "./svgs/PlaceholderSvg3";
 
 interface GuideStep {
   title: string;
   description: string;
-  icon: React.ReactNode;
-  image: string;
+  icon: React.ReactNode; // Keep the small icon if desired
+  svgComponent: React.FC<React.SVGProps<SVGSVGElement>>;
 }
 
 const GuideScreen = () => {
@@ -20,19 +25,19 @@ const GuideScreen = () => {
       title: "Find Sustainable Restaurants",
       description: "Discover eco-friendly restaurants that share your values for sustainable dining.",
       icon: <MapPin className="h-10 w-10 text-eco-500" />,
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&h=500"
+      svgComponent: PlaceholderSvg1
     },
     {
       title: "Order with Ease",
       description: "Browse menus, add items to your cart, and checkout seamlessly.",
       icon: <ShoppingBag className="h-10 w-10 text-eco-500" />,
-      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&h=500"
+      svgComponent: PlaceholderSvg2
     },
     {
       title: "Reduce Your Carbon Footprint",
       description: "Every order helps support eco-conscious businesses and sustainable practices.",
       icon: <Leaf className="h-10 w-10 text-eco-500" />,
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=800&h=500"
+      svgComponent: PlaceholderSvg3
     }
   ];
 
@@ -51,13 +56,25 @@ const GuideScreen = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <div className="flex-1 flex flex-col">
-        <div className="relative w-full h-[50vh]">
-          <img 
-            src={steps[currentStep].image} 
-            alt={steps[currentStep].title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        {/* Animated SVG Container */}
+        <div className="relative w-full h-[50vh] flex items-center justify-center overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 50 }} // Start off-screen right and invisible
+              animate={{ opacity: 1, x: 0 }} // Animate to center and visible
+              exit={{ opacity: 0, x: -50 }} // Animate off-screen left and invisible
+              transition={{ duration: 0.5 }}
+              className="absolute inset-0 flex items-center justify-center p-4" // Use absolute positioning for overlap during transition
+            >
+              {/* Render the current step's SVG component */}
+              {React.createElement(steps[currentStep].svgComponent, {
+                className: "w-full h-full max-w-md max-h-[40vh] object-contain", // Adjust size as needed
+              })}
+            </motion.div>
+          </AnimatePresence>
+          {/* Optional: Keep gradient overlay if desired */}
+          {/* <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" /> */}
         </div>
         
         <div className="p-6 -mt-16 relative z-10 flex-1 flex flex-col">

@@ -57,48 +57,30 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   const [isReady, setIsReady] = useState(false);
-  const [hasSeenGuide, setHasSeenGuide] = useState(false);
   const { user, isLoading } = useAuth();
   
   // Simple check for hydration and guide status
   useEffect(() => {
     setIsReady(true);
-    const guideSeen = localStorage.getItem("hasSeenGuide") === "true";
-    setHasSeenGuide(guideSeen);
   }, []);
   
-  // Mark the guide as seen when navigating away from it
-  useEffect(() => {
-    if (window.location.pathname !== "/guide" && !hasSeenGuide) {
-      localStorage.setItem("hasSeenGuide", "true");
-      setHasSeenGuide(true);
-    }
-  }, [hasSeenGuide]);
   
   if (!isReady || isLoading) return null;
   
-  // Determine the initial route based on whether the user has seen the guide
-  const getInitialRoute = () => {
-    if (!hasSeenGuide) {
-      return <Navigate to="/guide" />;
-    } else if (!user) {
-      return <Navigate to="/auth" />;
-    } else {
-      return <Navigate to="/" />;
-    }
-  };
   
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/guide" element={<GuideScreen />} />
-      <Route path="/auth" element={user ? <Navigate to="/" /> : <AuthPage />} />
+      {/* Home page (original index) - Protected */}
+      <Route path="/home" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+      <Route path="/auth" element={user ? <Navigate to="/home" /> : <AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
       <Route path="/auth/update-password" element={<UpdatePasswordPage />} />
       
       {/* Protected Routes */}
-      <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+      {/* Root route is now the Guide Screen - Public */}
+      <Route path="/" element= {user ? <Navigate to="/home" /> : <GuideScreen />} />
       <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
       <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
@@ -114,11 +96,9 @@ const AppRoutes = () => {
       <Route path="/restaurant/:restaurantId/table/:tableId/session/:sessionId" element={<ProtectedRoute><TableMenuPage /></ProtectedRoute>} />
       <Route path="/restaurant/:restaurantId/table/:tableId/checkout/:sessionId" element={<ProtectedRoute><TableCheckoutPage /></ProtectedRoute>} />
       
-      {/* Initial route */}
-      <Route path="/initial" element={getInitialRoute()} />
       
       {/* Catch-all route */}
-      <Route path="*" element={<Navigate to="/initial" />} />
+      <Route path="*" element={<Navigate to="/" />} /> {/* Redirect unknown paths to guide */}
     </Routes>
   );
 };

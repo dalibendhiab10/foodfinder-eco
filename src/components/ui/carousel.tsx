@@ -17,6 +17,8 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
+  activeIndex: number
+  className?: string
 }
 
 type CarouselContextProps = {
@@ -52,6 +54,7 @@ const Carousel = React.forwardRef<
       plugins,
       className,
       children,
+      activeIndex,
       ...props
     },
     ref
@@ -118,6 +121,13 @@ const Carousel = React.forwardRef<
       }
     }, [api, onSelect])
 
+    // Sync activeIndex with Embla carousel
+    React.useEffect(() => {
+      if (api) {
+        api.scrollTo(activeIndex)
+      }
+    }, [activeIndex, api])
+
     return (
       <CarouselContext.Provider
         value={{
@@ -130,6 +140,7 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          activeIndex,
         }}
       >
         <div
@@ -170,10 +181,16 @@ const CarouselContent = React.forwardRef<
 })
 CarouselContent.displayName = "CarouselContent"
 
+type CarouselItemProps = {
+  children: React.ReactNode
+  isActive: boolean
+  className?: string
+}
+
 const CarouselItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & CarouselItemProps
+>(({ className, isActive, ...props }, ref) => {
   const { orientation } = useCarousel()
 
   return (
@@ -184,9 +201,10 @@ const CarouselItem = React.forwardRef<
       className={cn(
         "min-w-0 shrink-0 grow-0 basis-full",
         orientation === "horizontal" ? "pl-4" : "pt-4",
-        className
+        className,
+        isActive ? 'active' : 'inactive' // Use `isActive` here for styling
       )}
-      {...props}
+      {...props} // Do not pass `isActive` to the DOM
     />
   )
 })

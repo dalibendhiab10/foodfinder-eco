@@ -143,8 +143,8 @@ export const getUserLoyaltyProfile = async (userId: string): Promise<UserLoyalty
     // Transform the data to match our interface
     return {
       id: data.id,
-      ecoPoints: data.eco_points || 0,
-      ecoLevel: data.eco_level || 'Eco Novice'
+      ecoPoints: data.eco_points,
+      ecoLevel: data.eco_level
     };
   } catch (error) {
     console.error('Error in getUserLoyaltyProfile:', error);

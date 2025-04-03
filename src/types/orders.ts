@@ -34,13 +34,13 @@ export interface OrderItem {
   name: string;
   quantity: number;
   unit_price: number;
-  special_instructions: string;
+  special_instructions: string | null;
   restaurant_id: string;
   created_at: string;
   table_session_id: string | null;
   selected_modifiers: any[];
   restaurants?: {
-    name: string;
-    logo_url: string;
+    name?: string;
+    logo_url?: string;
   };
 }

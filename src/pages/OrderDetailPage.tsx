@@ -40,7 +40,7 @@ const OrderDetailPage = () => {
         
         setOrder(typedOrder);
 
-        // Fetch order items
+        // Fetch order items with restaurant information
         const { data: itemsData, error: itemsError } = await supabase
           .from('order_items')
           .select(`
@@ -60,10 +60,13 @@ const OrderDetailPage = () => {
           selected_modifiers: Array.isArray(item.selected_modifiers) 
             ? item.selected_modifiers 
             : [], // Use empty array as fallback
-          restaurants: item.restaurants ? {
-            name: item.restaurants.name || '',
-            logo_url: item.restaurants.logo_url || ''
-          } : undefined
+          restaurants: item.restaurants 
+            ? {
+                // Use optional chaining to safely access properties
+                name: item.restaurants?.name || '',
+                logo_url: item.restaurants?.logo_url || ''
+              } 
+            : undefined
         }));
         
         setOrderItems(typedItems);

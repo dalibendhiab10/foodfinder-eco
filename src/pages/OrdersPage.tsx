@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,13 +19,26 @@ const OrdersPage = () => {
       try {
         if (!user) return;
 
-        // Query to get orders with restaurant name and count of items
-        const { data, error } = await supabase
-          .rpc('get_orders_with_details', {
-            user_id_param: user.id
-          });
+        // Attempt to use RPC function if it exists
+        let ordersData: Order[] = [];
+        
+        try {
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('get_orders_with_details', {
+              user_id_param: user.id
+            });
 
-        if (error) {
+          if (rpcError) throw rpcError;
+          
+          // Process RPC results if successful
+          ordersData = (rpcData || []).map(order => ({
+            ...order,
+            status: order.status as OrderStatus,
+            order_type: order.order_type as 'delivery' | 'pickup' | 'dine_in'
+          }));
+        } catch (rpcError) {
+          console.error('RPC function error, falling back to direct query:', rpcError);
+          
           // Fallback to direct query if RPC is not available
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('orders')
@@ -35,24 +49,14 @@ const OrdersPage = () => {
           if (fallbackError) throw fallbackError;
           
           // Type casting for fallback data
-          const typedFallbackData = fallbackData.map(order => ({
+          ordersData = (fallbackData || []).map(order => ({
             ...order,
             status: order.status as OrderStatus,
             order_type: order.order_type as 'delivery' | 'pickup' | 'dine_in'
           }));
-          
-          setOrders(typedFallbackData);
-        } else {
-          // Process RPC results
-          // Type casting to ensure correct types
-          const typedData = data.map(order => ({
-            ...order,
-            status: order.status as OrderStatus,
-            order_type: order.order_type as 'delivery' | 'pickup' | 'dine_in'
-          }));
-          
-          setOrders(typedData);
         }
+
+        setOrders(ordersData);
       } catch (error: any) {
         console.error('Error fetching orders:', error);
         toast({
@@ -149,7 +153,7 @@ const OrdersPage = () => {
                   </td>
                    <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                     <p className="text-gray-900 whitespace-no-wrap">
-                      {order.items_count}
+                      {order.items_count || 'N/A'}
                     </p>
                   </td>
                   <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">

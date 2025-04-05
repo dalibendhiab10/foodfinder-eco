@@ -67,62 +67,9 @@ const ProfilePage = () => {
 
   return (
     // Use pb-20 like the old version to ensure space above BottomNav
-    <div className="container max-w-md mx-auto pb-20 bg-background min-h-screen"> 
+    <div className="container max-w-md mx-auto pt-20 pb-20 bg-background min-h-screen"> {/* Added pt-20 */}
       {/* Header section styled like the first version */}
-      <div className="bg-eco-500 text-white pt-12 pb-6 px-4 rounded-b-3xl mb-6"> 
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Profile</h1>
-          <div className="flex gap-2">
-            {/* Settings Button */}
-            <Link to="/profile/settings">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-white hover:bg-white/20"
-              >
-                <Settings size={20} />
-              </Button>
-            </Link>
-            {/* Logout Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-white hover:bg-white/20"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-            >
-              <LogOut size={20} />
-            </Button>
-          </div>
-        </div>
-
-        {/* User info section styled like the first version, using current logic */}
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center overflow-hidden">
-            {user?.user_metadata?.avatar_url ? (
-              <img 
-                src={user.user_metadata.avatar_url} 
-                alt="Profile" 
-                className="w-full h-full object-cover" 
-              />
-            ) : (
-              <User size={32} className="text-white" /> // Use white icon like old version
-            )}
-          </div>
-          <div>
-            <h2 className="font-bold text-lg">
-              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
-            </h2>
-            <p className="text-white/70">{user?.email}</p>
-            {!loading && userProfile && (
-              <div className="flex items-center mt-1">
-                <Leaf size={16} className="mr-1" />
-                <span className="text-sm">{userProfile.ecoLevel}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Removed custom header section */}
 
       {/* Loyalty/Eco Impact Section - Added from commit a52cc0e */}
       <div className="px-4 -mt-4"> {/* Use -mt-4 to overlap with header like original */}

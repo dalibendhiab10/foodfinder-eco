@@ -63,10 +63,8 @@ const CartPage = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen pb-16">
-        <div className="p-4 bg-background sticky top-0 z-10 border-b">
-          <h1 className="text-2xl font-bold">Shopping Cart</h1>
-        </div>
+      <div className="min-h-screen pt-20 pb-16"> {/* Added pt-20 */}
+        {/* Removed custom header */}
         
         <div className="flex flex-col items-center justify-center p-8 h-[70vh]">
           <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
@@ -81,10 +79,8 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-16">
-      <div className="p-4 bg-background sticky top-0 z-10 border-b">
-        <h1 className="text-2xl font-bold">Shopping Cart</h1>
-      </div>
+    <div className="min-h-screen pt-20 pb-16"> {/* Added pt-20 */}
+      {/* Removed custom header */}
       
       <div className="p-4">
         <div className="space-y-4 mb-6">

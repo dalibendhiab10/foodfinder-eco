@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom"; // Added Outlet
 import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./redux/store";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -27,8 +27,8 @@ import ScanQRPage from "./pages/ScanQRPage";
 import TableMenuPage from "./pages/TableMenuPage";
 import TableCheckoutPage from "./pages/TableCheckoutPage";
 import GuideScreen from "./components/GuideScreen";
+import TopBar from "./components/TopBar"; // Added TopBar import
 import { useEffect, useState } from "react";
-
 const queryClient = new QueryClient();
 
 // Improved auth guard
@@ -58,18 +58,32 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   const [isReady, setIsReady] = useState(false);
   const { user, isLoading } = useAuth();
-  
+  const location = useLocation(); // Get location
+
+  // Paths where TopBar should NOT be shown
+  const noTopBarPaths = [
+    '/',
+    '/auth',
+    '/auth/callback',
+    '/auth/reset-password',
+    '/auth/update-password'
+  ];
+
+  const showTopBar = !noTopBarPaths.includes(location.pathname);
+
   // Simple check for hydration and guide status
   useEffect(() => {
     setIsReady(true);
   }, []);
-  
-  
+
+
   if (!isReady || isLoading) return null;
-  
-  
+
+
   return (
-    <Routes>
+    <>
+      {showTopBar && <TopBar />} {/* Conditionally render TopBar */}
+      <Routes>
       {/* Public Routes */}
       {/* Home page (original index) - Protected */}
       <Route path="/home" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -99,7 +113,8 @@ const AppRoutes = () => {
       
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" />} /> {/* Redirect unknown paths to guide */}
-    </Routes>
+      </Routes>
+    </>
   );
 };
 

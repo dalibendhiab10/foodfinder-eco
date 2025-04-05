@@ -202,45 +202,9 @@ const LoyaltyProgramPage = () => {
   const { currentLevel, nextLevel, progressPercentage, pointsToNextLevel } = getUserLevel();
   
   return (
-    <div className="container max-w-md mx-auto pb-20">
-      <div className="bg-eco-500 text-white pt-12 pb-6 px-4 rounded-b-3xl">
-        <Link to="/profile" className="flex items-center gap-2 text-white/80 mb-4">
-          <ChevronRight className="rotate-180" size={20} />
-          <span>Back to Profile</span>
-        </Link>
-        
-        <h1 className="text-2xl font-bold mb-4">Eco Rewards</h1>
-        
-        <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-          <div className="flex justify-between items-center mb-3">
-            <div>
-              <p className="text-sm text-white/70">Current Points</p>
-              <p className="text-3xl font-bold">{userProfile?.ecoPoints || 0}</p>
-            </div>
-            {currentLevel && (
-              <div className="flex flex-col items-center">
-                <div className="h-12 w-12 flex items-center justify-center rounded-full bg-white/20 mb-1">
-                  {currentLevel.icon}
-                </div>
-                <p className="text-sm">{currentLevel.name}</p>
-              </div>
-            )}
-          </div>
-          
-          {nextLevel && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Level Progress</span>
-                <span>{userProfile?.ecoPoints || 0} / {nextLevel.points}</span>
-              </div>
-              <Progress value={progressPercentage} className="h-2 bg-white/20" />
-              <p className="text-xs text-white/70">
-                {pointsToNextLevel} more points until {nextLevel.name}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+    // Added pt-20
+    <div className="container max-w-md mx-auto pt-20 pb-20">
+      {/* Removed header-like section */}
       
       <div className="px-4 py-6 space-y-6">
         <Card>

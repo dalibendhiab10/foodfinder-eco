@@ -41,10 +41,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         if (event === 'SIGNED_IN') {
-          toast({
-            title: 'Signed in successfully',
-            description: 'Welcome back!',
-          });
+          // toast({
+          //   title: 'Signed in successfully',
+          //   description: 'Welcome back!',
+          // });
         } else if (event === 'SIGNED_OUT') {
           toast({
             title: 'Signed out successfully',

@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Package, User, QrCode } from "lucide-react";
+import { Home, Search, User, Award } from "lucide-react"; // Removed Package, QrCode, added Award
 import NotificationBell from "./NotificationBell";
 import CartButton from "./CartButton";
 
@@ -20,7 +20,6 @@ const BottomNav = () => {
         }`}
       >
         <Home className="w-5 h-5" />
-        {isActive("/") && <span className="text-xs mt-1">Home</span>}
       </Link>
       
       <Link
@@ -30,27 +29,15 @@ const BottomNav = () => {
         }`}
       >
         <Search className="w-5 h-5" />
-        {isActive("/search") && <span className="text-xs mt-1">Search</span>}
       </Link>
       
       <Link
-        to="/scan-qr"
+        to="/loyalty" // Added loyalty link
         className={`flex flex-col items-center justify-center p-2 ${
-          isActive("/scan-qr") ? "text-primary" : "text-muted-foreground"
+          isActive("/loyalty") ? "text-primary" : "text-muted-foreground"
         }`}
       >
-        <QrCode className="w-5 h-5" />
-        {isActive("/scan-qr") && <span className="text-xs mt-1">Scan QR</span>}
-      </Link>
-      
-      <Link
-        to="/orders"
-        className={`flex flex-col items-center justify-center p-2 ${
-          isActive("/orders") ? "text-primary" : "text-muted-foreground"
-        }`}
-      >
-        <Package className="w-5 h-5" />
-        {isActive("/orders") && <span className="text-xs mt-1">Orders</span>}
+        <Award className="w-5 h-5" />
       </Link>
       
       <Link
@@ -60,7 +47,6 @@ const BottomNav = () => {
         }`}
       >
         <User className="w-5 h-5" />
-        {isActive("/profile") && <span className="text-xs mt-1">Profile</span>}
       </Link>
       
 

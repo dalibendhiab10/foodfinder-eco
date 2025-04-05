@@ -108,29 +108,8 @@ const FoodDetailPage = () => {
   };
   
   return (
-    <div className="container max-w-md mx-auto pb-20 sm:max-w-2xl lg:max-w-4xl">
-      <div className="sticky top-0 z-30 bg-background pt-4 pb-2 px-4 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <Link to="/">
-              <Button variant="ghost" size="icon" className="mr-2">
-                <ArrowLeft size={20} />
-              </Button>
-            </Link>
-            <h1 className="text-xl font-bold">{food.title}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link to="/cart">
-              <Button variant="ghost" size="icon">
-                <ShoppingBag size={20} />
-              </Button>
-            </Link>
-            <Link to="/notifications">
-              <NotificationBell />
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div className="container max-w-md mx-auto pt-20 pb-20 sm:max-w-2xl lg:max-w-4xl"> {/* Added pt-20 */}
+      {/* Removed sticky header div */}
 
       <div className="relative">
         <img 

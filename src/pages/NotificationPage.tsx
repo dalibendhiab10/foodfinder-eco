@@ -107,10 +107,9 @@ const NotificationPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen pb-16">
-        <div className="p-4 bg-background sticky top-0 z-50 border-b">
-          <h1 className="text-2xl font-bold">Notifications</h1>
-        </div>
+      // Added pt-20
+      <div className="min-h-screen pt-20 pb-16">
+        {/* Removed custom header */}
         
         <div className="p-4">
           <div className="space-y-4">
@@ -132,10 +131,9 @@ const NotificationPage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-16">
-      <div className="p-4 bg-background sticky top-0 z-50 border-b">
-        <h1 className="text-2xl font-bold">Notifications</h1>
-      </div>
+    // Added pt-20
+    <div className="min-h-screen pt-20 pb-16">
+      {/* Removed custom header */}
       
       <div className="p-4">
         {notifications.length > 0 ? (

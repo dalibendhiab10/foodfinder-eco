@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,19 +20,19 @@ const OrderDetailPage = () => {
     try {
       const { data, error } = await supabase
         .from('restaurants')
-        .select('name, logo_url')
+        .select('name')
         .eq('id', restaurantId)
         .single();
 
       if (error) {
         console.error('Error fetching restaurant info:', error);
-        return { name: 'Restaurant', logo_url: null };
+        return { name: 'Restaurant' }; // Default fallback value
       }
       
-      return data;
+      return { name: data.name || 'Restaurant' };
     } catch (err) {
       console.error('Error in fetchRestaurantInfo:', err);
-      return { name: 'Restaurant', logo_url: null };
+      return { name: 'Restaurant' }; // Default fallback value
     }
   };
 
@@ -59,33 +60,28 @@ const OrderDetailPage = () => {
         
         setOrder(typedOrder);
 
-        // Fetch order items with restaurant information
+        // Fetch order items
         const { data: itemsData, error: itemsError } = await supabase
           .from('order_items')
-          .select(`
-            *,
-            restaurants (
-              name,
-              logo_url
-            )
-          `)
+          .select('*')
           .eq('order_id', id);
 
         if (itemsError) throw itemsError;
         
         // Transform the selected_modifiers to be an array and ensure proper typing
-        const typedItems: OrderItem[] = itemsData.map(item => ({
-          ...item,
-          selected_modifiers: Array.isArray(item.selected_modifiers) 
-            ? item.selected_modifiers 
-            : [], // Use empty array as fallback
-          restaurants: item.restaurants 
-            ? {
-                // Use optional chaining to safely access properties
-                name: item.restaurants?.name || '',
-                logo_url: item.restaurants?.logo_url || ''
-              } 
-            : undefined
+        const typedItems: OrderItem[] = await Promise.all(itemsData.map(async (item) => {
+          // For each item, fetch the restaurant name if needed
+          const restaurantInfo = await fetchRestaurantInfo(item.restaurant_id);
+          
+          return {
+            ...item,
+            selected_modifiers: Array.isArray(item.selected_modifiers) 
+              ? item.selected_modifiers 
+              : [], // Use empty array as fallback
+            restaurants: {
+              name: restaurantInfo.name
+            }
+          };
         }));
         
         setOrderItems(typedItems);
@@ -158,13 +154,6 @@ const OrderDetailPage = () => {
           {orderItems.map((item) => (
             <li key={item.id} className="py-2 border-b border-gray-200">
               <div className="flex items-center">
-                {item.restaurants?.logo_url && (
-                  <img
-                    src={item.restaurants.logo_url}
-                    alt={item.restaurants.name}
-                    className="w-10 h-10 rounded-full mr-2"
-                  />
-                )}
                 <div>
                   <p className="font-semibold">{item.name}</p>
                   <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>

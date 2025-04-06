@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +30,7 @@ const OrdersPage = () => {
       
       if (!user) throw new Error('User not authenticated');
       
+      // Fix the type of the user_id parameter by specifying the correct type in the rpc call
       const { data, error } = await supabase.rpc('get_user_orders', {
         user_id: user.id
       });

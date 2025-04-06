@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,26 @@ const OrderDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const fetchRestaurantInfo = async (restaurantId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('name, logo_url')
+        .eq('id', restaurantId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching restaurant info:', error);
+        return { name: 'Restaurant', logo_url: null };
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('Error in fetchRestaurantInfo:', err);
+      return { name: 'Restaurant', logo_url: null };
+    }
+  };
 
   useEffect(() => {
     const fetchOrderDetails = async () => {

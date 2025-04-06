@@ -26,9 +26,12 @@ const AuthCallbackPage = () => {
         }
         
         if (data.session) {
+          // Determine which provider was used
+          const provider = data.session.user?.app_metadata?.provider || 'email';
+          
           toast({
             title: 'Authentication successful',
-            description: 'You have been signed in successfully.',
+            description: `You have been signed in successfully with ${provider}.`,
           });
           
           // Redirect to the intended destination after successful auth

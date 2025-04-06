@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, Eye, EyeOff } from 'lucide-react'; // Removed Mail, Apple. Added Eye, EyeOff
-import GoogleIcon from './GoogleIcon'; // Placeholder import
-// import AppleIcon from './AppleIcon'; // Removed import - User will add this file later
+import { Loader2, Eye, EyeOff } from 'lucide-react';
+import GoogleIcon from './GoogleIcon';
+import FacebookIcon from './FacebookIcon';
 
 type AuthMode = 'login' | 'register';
 
@@ -20,7 +19,7 @@ const AuthForm = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false); // Added state for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -106,7 +105,7 @@ const AuthForm = () => {
     }
   };
 
-  const handleSocialAuth = async (provider: 'google' | 'apple') => {
+  const handleSocialAuth = async (provider: 'google' | 'facebook') => {
     try {
       setSocialLoading(provider);
       
@@ -171,7 +170,7 @@ const AuthForm = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  className="pr-10" // Add padding for the icon
+                  className="pr-10"
                 />
                 <button
                   type="button"
@@ -235,7 +234,7 @@ const AuthForm = () => {
                   required
                   disabled={loading}
                   minLength={6}
-                  className="pr-10" // Add padding for the icon
+                  className="pr-10"
                 />
                 <button
                   type="button"
@@ -284,21 +283,21 @@ const AuthForm = () => {
             {socialLoading === 'google' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <GoogleIcon className="mr-2 h-4 w-4" /> // Use placeholder GoogleIcon
+              <GoogleIcon className="mr-2 h-4 w-4" />
             )}
             Google
           </Button>
           <Button 
             variant="outline" 
-            onClick={() => handleSocialAuth('apple')}
+            onClick={() => handleSocialAuth('facebook')}
             disabled={socialLoading !== null}
           >
-            {socialLoading === 'apple' ? (
+            {socialLoading === 'facebook' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <span className="mr-2 h-4 w-4"></span>
+              <FacebookIcon className="mr-2 h-4 w-4" />
             )}
-            Apple
+            Facebook
           </Button>
         </div>
       </div>

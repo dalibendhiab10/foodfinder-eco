@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,6 @@ const UpdatePasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,17 +19,13 @@ const UpdatePasswordPage = () => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Password reset link is invalid or has expired',
-        });
+        toast.error('Password reset link is invalid or has expired');
         navigate('/auth');
       }
     };
 
     checkSession();
-  }, [navigate, toast]);
+  }, [navigate]); // Removed toast from dependency array as it's now imported directly
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,18 +49,11 @@ const UpdatePasswordPage = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Password updated',
-        description: 'Your password has been successfully updated',
-      });
+      toast.success('Your password has been successfully updated');
 
       setTimeout(() => navigate('/'), 1500);
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to update password',
-      });
+      toast.error(error.message || 'Failed to update password');
     } finally {
       setLoading(false);
     }

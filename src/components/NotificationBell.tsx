@@ -1,4 +1,3 @@
-
 import { Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -10,66 +9,62 @@ interface NotificationBellProps {
 }
 
 const NotificationBell: React.FC<NotificationBellProps> = ({ unreadCount = 0 }) => {
-  const [count, setCount] = useState(unreadCount);
+  const [count, setCount] = useState(0); // Initialize with 0 instead of unreadCount
   const { user } = useAuth();
-  
+
   useEffect(() => {
     if (!user) {
       setCount(0);
       return;
     }
-    
+
     // Fetch unread notification count
     const fetchUnreadCount = async () => {
       try {
-        const { count, error } = await supabase
+        const { count: fetchedCount, error } = await supabase
           .from('notifications')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .eq('is_read', false);
-          
+
         if (error) throw error;
-        
-        setCount(count || 0);
+
+        setCount(fetchedCount || 0); // Use fetchedCount instead of count
       } catch (err) {
         console.error('Error fetching notification count:', err);
       }
     };
-    
+
     fetchUnreadCount();
-    
+
     // Subscribe to notification changes
     const channel = supabase
       .channel('public:notifications')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
+      .on('postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
-        }, 
-        () => {
-          fetchUnreadCount();
-        }
+        },
+        fetchUnreadCount // Simplify callback
       )
-      .on('postgres_changes', 
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
+      .on('postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
-        }, 
-        () => {
-          fetchUnreadCount();
-        }
+        },
+        fetchUnreadCount // Simplify callback
       )
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
-  
+
   return (
     <Link to="/notifications" className="relative p-2">
       <Bell className="h-6 w-6" />

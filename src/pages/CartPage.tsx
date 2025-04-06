@@ -63,7 +63,7 @@ const CartPage = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen pt-20 pb-16 bg-background"> {/* Added bg-background */}
+      <div className="min-h-screen  pb-16 bg-background"> {/* Added bg-background */}
         {/* Removed custom header */}
         
         <div className="flex flex-col items-center justify-center p-8 h-[70vh]">
@@ -79,7 +79,7 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-16 bg-background"> {/* Added bg-background */}
+    <div className="min-h-screen  pb-16 bg-background"> {/* Added bg-background */}
       {/* Removed custom header */}
       
       <div className="p-4">

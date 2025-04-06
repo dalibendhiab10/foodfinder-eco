@@ -1,7 +1,5 @@
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify'; // Added toast import
 import 'react-toastify/dist/ReactToastify.css';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom"; // Added Outlet
@@ -123,8 +121,6 @@ const App = () => {
     <ReduxProvider store={store}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner position="top-center" className="top-0 md:top-4 right-0 md:right-4" />
           <ToastContainer
             position="top-right"
             className="mt-20" // Add top margin to position below TopBar

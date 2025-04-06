@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,9 +53,8 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="container max-w-md mx-auto pt-20 pb-20 min-h-screen bg-background"> {/* Added min-h-screen and bg-background */}
-      {/* Removed sticky header div, kept form */}
-      <form onSubmit={handleSearch} className="relative mb-4 px-4"> {/* Added px-4 here */}
+    <div className="container mx-auto mt-10 pb-20 min-h-screen bg-background px-2"> {/* Changed max-w-md to full width and added px-2 for small padding */}
+      <form onSubmit={handleSearch} className="relative mb-4"> {/* Removed px-4 here */}
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search for restaurants or food..."

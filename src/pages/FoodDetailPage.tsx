@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock, MapPin, Bookmark, Share2, ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'react-toastify'; // Replaced useToast with toast from React Toastify
 import NotificationBell from '@/components/NotificationBell';
 import { useAppDispatch } from '@/redux/hooks';
 import { addItem } from '@/redux/slices/cartSlice';
@@ -12,7 +11,6 @@ import { getFoodItemById, FoodItem } from '@/services/foodService';
 
 const FoodDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -87,28 +85,19 @@ const FoodDetailPage = () => {
       restaurantName: food.restaurant_name || ''
     }));
     
-    toast({
-      title: "Added to cart",
-      description: `${quantity} x ${food.title} added to your cart`,
-    });
+    toast.success(`${quantity} x ${food.title} added to your cart`); // Updated to use toast.success
   };
   
   const handleSaveForLater = () => {
-    toast({
-      title: "Saved for later",
-      description: `${food.title} has been saved to your favorites`,
-    });
+    toast.info(`${food.title} has been saved to your favorites`); // Updated to use toast.info
   };
   
   const handleShare = () => {
-    toast({
-      title: "Share this deal",
-      description: "Sharing options would appear here",
-    });
+    toast.info("Sharing options would appear here"); // Updated to use toast.info
   };
   
   return (
-    <div className="container max-w-md mx-auto pt-20 pb-20 sm:max-w-2xl lg:max-w-4xl min-h-screen bg-background"> {/* Added min-h-screen and bg-background */}
+    <div className="container max-w-md mx-auto pb-20 sm:max-w-2xl lg:max-w-4xl min-h-screen bg-background"> {/* Added min-h-screen and bg-background */}
       {/* Removed sticky header div */}
 
       <div className="relative">
@@ -187,18 +176,7 @@ const FoodDetailPage = () => {
             </Button>
           </div>
           
-          <div className="border-t border-b py-4 mb-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="text-muted-foreground line-through text-sm mr-2">
-                  ${food.original_price.toFixed(2)}
-                </span>
-                <span className="text-xl font-bold">
-                  ${food.discounted_price.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
       

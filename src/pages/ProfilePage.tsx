@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
-import { User, Settings, Heart, Star, CreditCard, LogOut, Award, Gift, ChevronRight, Leaf, Loader2 } from 'lucide-react';
+import { User, Settings, Heart, Star, CreditCard, LogOut, Leaf, Loader2 } from 'lucide-react'; // Removed Award, Gift, ChevronRight
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+// Removed Progress import
 import { getUserLoyaltyProfile } from '@/services/loyaltyService';
+import EcoImpactCard from '@/components/EcoImpactCard'; // Added import
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -22,7 +22,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user) return;
-      
+
       try {
         setLoading(true);
         const profile = await getUserLoyaltyProfile(user.id);
@@ -33,7 +33,7 @@ const ProfilePage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchUserProfile();
   }, [user]);
 
@@ -62,80 +62,54 @@ const ProfilePage = () => {
     { icon: CreditCard, label: 'Payment Methods', path: '/profile/payment' },
     { icon: Star, label: 'My Reviews', path: '/profile/reviews' },
     { icon: Heart, label: 'Favorites', path: '/profile/favorites' },
-    // Settings is now an icon button in the header
   ];
 
   return (
-    // Use pb-20 like the old version to ensure space above BottomNav
-    <div className="container max-w-md mx-auto pt-20 pb-20 bg-background min-h-screen"> {/* Added pt-20 */}
-      {/* Header section styled like the first version */}
-      {/* Removed custom header section */}
+    // Use pb-20 for space above BottomNav. Use grid layout.
+    <div className="container max-w-md mx-auto pb-20 bg-background min-h-screen grid grid-cols-1">
+      {/* User Details Section - Centered content, no relative/absolute */}
+      {user && (
+        <div className="bg-eco-500 rounded-b-2xl p-6 mb-6 flex flex-col items-center space-y-4 text-white">
+          {/* Avatar Placeholder */}
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/20 flex items-center justify-center text-white">
+            <User size={40} />
+          </div>
+          {/* User Info - Centered */}
+          <div className="flex-grow text-center">
+            <h2 className="text-xl md:text-2xl font-semibold">{user.user_metadata?.full_name || 'User Name'}</h2>
+            <p className="text-sm text-eco-100">{user.email}</p>
+          </div>
+          {/* Icon Buttons Container - Centered below text */}
+          <div className="flex items-center justify-center space-x-2 pt-2">
 
-      {/* Loyalty/Eco Impact Section - Added from commit a52cc0e */}
-      <div className="px-4 -mt-4"> {/* Use -mt-4 to overlap with header like original */}
-        <Card className="shadow-lg mb-6">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold">Eco Impact</h3>
-              <Award size={20} className="text-eco-500" />
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="border-white text-eco-600 hover:bg-white  h-8 w-8"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              aria-label="Logout"
+            >
+              {isLoggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut size={16} />}
+            </Button>
+          </div>
+        </div>
+      )}
 
-            {loading ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-eco-500" />
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center p-3 bg-eco-50 rounded-lg">
-                    {/* Placeholder Data */}
-                    <p className="text-3xl font-bold text-eco-600">0</p>
-                    <p className="text-sm text-muted-foreground">kg food saved</p>
-                  </div>
-                  <div className="text-center p-3 bg-eco-50 rounded-lg">
-                    {/* Placeholder Data */}
-                    <p className="text-3xl font-bold text-eco-600">0</p>
-                    <p className="text-sm text-muted-foreground">kg CO₂ reduced</p>
-                  </div>
-                </div>
-
-                <div className="mb-2">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Eco Points</span>
-                    <span className="font-medium">{userProfile?.ecoPoints || 0}</span>
-                  </div>
-                  <Progress value={userProfile?.ecoPoints ? Math.min(userProfile.ecoPoints / 100, 100) : 0} className="h-2 bg-eco-100" />
-                </div>
-
-                <p className="text-xs text-muted-foreground mb-3">
-                  Earn points to reach the next level!
-                </p>
-              </>
-            )}
-
-            <Link to="/loyalty">
-              <Button className="w-full flex justify-between bg-eco-500 hover:bg-eco-600">
-                <span className="flex items-center gap-2">
-                  <Gift size={16} />
-                  Loyalty Program & Rewards
-                </span>
-                <ChevronRight size={16} />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+      {/* Loyalty/Eco Impact Section - Uses the new component */}
+      <div className="px-4">
+        <EcoImpactCard userProfile={userProfile} loading={loading} />
 
       {/* Menu Section - Use current logic but wrap in a Card for visual grouping */}
-      {/* Removed redundant px-4 wrapper, using the one above */}
         <Card className="shadow-lg">
           <CardContent className="p-2"> {/* Reduced padding for list items */}
             <div className="space-y-1">
               {menuItems.map((item) => (
-                <Link 
-                  key={item.path} 
+                <Link
+                  key={item.path}
                   to={item.path}
                   // Style links similar to current, but within the card
-                  className="flex items-center p-3 rounded-md hover:bg-muted transition-colors" 
+                  className="flex items-center p-3 rounded-md hover:bg-muted transition-colors"
                 >
                   <item.icon className="h-5 w-5 mr-3 text-muted-foreground" />
                   <span>{item.label}</span>

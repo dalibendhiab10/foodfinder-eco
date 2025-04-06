@@ -127,6 +127,7 @@ const App = () => {
           <Sonner position="top-center" className="top-0 md:top-4 right-0 md:right-4" />
           <ToastContainer
             position="top-right"
+            className="mt-20" // Add top margin to position below TopBar
             autoClose={5000}
             hideProgressBar={false}
             newestOnTop={false}

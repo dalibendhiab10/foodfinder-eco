@@ -108,7 +108,7 @@ const FoodDetailPage = () => {
   };
   
   return (
-    <div className="container max-w-md mx-auto pt-20 pb-20 sm:max-w-2xl lg:max-w-4xl"> {/* Added pt-20 */}
+    <div className="container max-w-md mx-auto pt-20 pb-20 sm:max-w-2xl lg:max-w-4xl min-h-screen bg-background"> {/* Added min-h-screen and bg-background */}
       {/* Removed sticky header div */}
 
       <div className="relative">

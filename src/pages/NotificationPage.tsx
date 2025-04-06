@@ -108,7 +108,7 @@ const NotificationPage = () => {
   if (loading) {
     return (
       // Added pt-20
-      <div className="min-h-screen pt-20 pb-16">
+      <div className="min-h-screen pt-20 pb-16 bg-background"> {/* Added bg-background */}
         {/* Removed custom header */}
         
         <div className="p-4">
@@ -132,7 +132,7 @@ const NotificationPage = () => {
 
   return (
     // Added pt-20
-    <div className="min-h-screen pt-20 pb-16">
+    <div className="min-h-screen pt-20 pb-16 bg-background"> {/* Added bg-background */}
       {/* Removed custom header */}
       
       <div className="p-4">

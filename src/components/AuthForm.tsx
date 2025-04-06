@@ -7,7 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, Mail, Apple } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react'; // Removed Mail, Apple. Added Eye, EyeOff
+import GoogleIcon from './GoogleIcon'; // Placeholder import
+// import AppleIcon from './AppleIcon'; // Removed import - User will add this file later
 
 type AuthMode = 'login' | 'register';
 
@@ -18,6 +20,7 @@ const AuthForm = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false); // Added state for password visibility
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -138,7 +141,7 @@ const AuthForm = () => {
           <TabsTrigger value="register">Register</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="login">
+        <TabsContent value="login" className="transition-opacity duration-300 ease-in-out data-[state=inactive]:opacity-0 data-[state=active]:opacity-100">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -159,15 +162,26 @@ const AuthForm = () => {
                   Forgot password?
                 </a>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
+              <div className="relative">
+                <Input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  className="pr-10" // Add padding for the icon
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <Button 
               type="submit" 
@@ -184,7 +198,7 @@ const AuthForm = () => {
           </form>
         </TabsContent>
 
-        <TabsContent value="register">
+        <TabsContent value="register" className="transition-opacity duration-300 ease-in-out data-[state=inactive]:opacity-0 data-[state=active]:opacity-100">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -210,17 +224,28 @@ const AuthForm = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                minLength={6}
-              />
+              <Label htmlFor="register-password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="register-password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="•••••••• (min. 6 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                  minLength={6}
+                  className="pr-10" // Add padding for the icon
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <Button 
               type="submit" 
@@ -259,7 +284,7 @@ const AuthForm = () => {
             {socialLoading === 'google' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Mail className="mr-2 h-4 w-4" />
+              <GoogleIcon className="mr-2 h-4 w-4" /> // Use placeholder GoogleIcon
             )}
             Google
           </Button>
@@ -271,7 +296,7 @@ const AuthForm = () => {
             {socialLoading === 'apple' ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Apple className="mr-2 h-4 w-4" />
+              <span className="mr-2 h-4 w-4"></span>
             )}
             Apple
           </Button>

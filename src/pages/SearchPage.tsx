@@ -54,7 +54,7 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="container max-w-md mx-auto pt-20 pb-20"> {/* Added pt-20 */}
+    <div className="container max-w-md mx-auto pt-20 pb-20 min-h-screen bg-background"> {/* Added min-h-screen and bg-background */}
       {/* Removed sticky header div, kept form */}
       <form onSubmit={handleSearch} className="relative mb-4 px-4"> {/* Added px-4 here */}
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

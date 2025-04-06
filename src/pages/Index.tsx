@@ -43,7 +43,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="mx-auto pt-20 pb-20"> {/* Added pt-20 to account for global TopBar */}
+    <div className="mx-auto pt-20 pb-20 min-h-screen bg-background"> {/* Added min-h-screen and bg-background */}
       {/* <TopBar /> */} {/* Removed TopBar usage */}
 
       <div className="px-4">

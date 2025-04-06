@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Trophy, Award, Gift, Leaf, ChevronRight, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import BottomNav from '@/components/BottomNav';
+import EcoImpactCard from '@/components/EcoImpactCard'; // Added import
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -202,11 +203,14 @@ const LoyaltyProgramPage = () => {
   const { currentLevel, nextLevel, progressPercentage, pointsToNextLevel } = getUserLevel();
   
   return (
-    // Added pt-20
-    <div className="container max-w-md mx-auto pt-20 pb-20">
+    // Adjusted for full screen height and background
+    <div className="container max-w-md mx-auto pb-20 bg-background min-h-screen">
       {/* Removed header-like section */}
       
       <div className="px-4 py-6 space-y-6">
+        {/* Added EcoImpactCard */}
+        <EcoImpactCard userProfile={userProfile} loading={loading} />
+
         <Card>
           <CardContent className="p-4">
             <h2 className="font-bold text-lg flex items-center gap-2 mb-4">

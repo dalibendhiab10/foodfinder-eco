@@ -204,18 +204,17 @@ export const getUserCollaborations = async (): Promise<{merchantId: string, busi
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return [];
 
-    // Use a simpler query approach to avoid deep type instantiation errors
+    // Get collaborations data
     const { data: collabData, error: collabError } = await supabase
       .from('merchant_collaborators')
       .select('merchant_id, permissions')
       .eq('user_id', session.session.user.id);
     
     if (collabError) throw collabError;
+    if (!collabData || collabData.length === 0) return [];
     
-    // Now fetch business names in a separate query
-    const merchantIds = (collabData || []).map(item => item.merchant_id);
-    
-    if (merchantIds.length === 0) return [];
+    // Get merchant names in a separate query
+    const merchantIds = collabData.map(item => item.merchant_id);
     
     const { data: merchantData, error: merchantError } = await supabase
       .from('merchant_profiles')
@@ -225,7 +224,7 @@ export const getUserCollaborations = async (): Promise<{merchantId: string, busi
     if (merchantError) throw merchantError;
     
     // Join the data manually
-    return (collabData || []).map(collab => {
+    return collabData.map(collab => {
       const merchant = merchantData?.find(m => m.id === collab.merchant_id);
       return {
         merchantId: collab.merchant_id,

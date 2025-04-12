@@ -22,7 +22,7 @@ import { fetchMerchantProfile, MerchantProfile } from '@/services/merchantServic
 import { FoodItem, getAllFoodItems } from '@/services/foodService';
 import MerchantNav from '@/components/merchant/MerchantNav';
 import { Order } from '@/types/orders';
-import { ensureOrderStatus, ensureOrderType } from '@/types/database'; // Import both helper functions
+import { ensureOrderStatus, ensureOrderType } from '@/types/database'; 
 import { supabase } from '@/integrations/supabase/client';
 import { ShoppingBag, Package, TrendingUp } from 'lucide-react';
 
@@ -57,7 +57,7 @@ const MerchantDashboardPage = () => {
         const items = await getAllFoodItems();
         setFoodItems(items.filter(item => item.restaurant_id === merchantProfile.id));
         
-        // Further simplify the query to avoid deep type instantiation
+        // Get orders with a simpler approach
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
           .select('id, created_at, status, subtotal, tax, delivery_fee, total, user_id, restaurant_table_id, table_session_id, order_type, is_paid')
@@ -66,26 +66,33 @@ const MerchantDashboardPage = () => {
           
         if (orderError) throw orderError;
         
-        // Get items count separately to avoid deep type instantiation
-        const { data: itemsCountData } = await Promise.all(
-          (orderData || []).map(order => 
-            supabase
+        // Get item counts in a separate loop to avoid deep nesting
+        const itemCounts: {orderId: string, count: number}[] = [];
+        
+        if (orderData && orderData.length > 0) {
+          // Get counts individually for each order
+          for (const order of orderData) {
+            const { count } = await supabase
               .from('order_items')
-              .select('id', { count: 'exact' })
-              .eq('order_id', order.id)
-              .then(({ count }) => ({ orderId: order.id, count: count || 0 }))
-          )
-        );
+              .select('*', { count: 'exact' })
+              .eq('order_id', order.id);
+            
+            itemCounts.push({
+              orderId: order.id,
+              count: count || 0
+            });
+          }
+        }
         
         // Process the orders with proper type handling
         const processedOrders: Order[] = (orderData || []).map(order => {
-          const itemCount = itemsCountData?.find(item => item.orderId === order.id)?.count || 0;
+          const itemCount = itemCounts.find(item => item.orderId === order.id)?.count || 0;
           
           return {
             ...order,
             status: ensureOrderStatus(order.status),
             order_type: ensureOrderType(order.order_type || 'delivery'),
-            items_count: Number(itemCount)
+            items_count: itemCount
           };
         });
         

@@ -156,7 +156,8 @@ const ProductFormPage = () => {
         ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
         : [];
       
-      // Ensure all required fields are included and explicitly set
+      // Updated product data: use merchant_id for both restaurant_id and merchant_id fields
+      // This fixes the foreign key constraint violation
       const productData = {
         title: data.title,
         description: data.description,
@@ -169,6 +170,8 @@ const ProductFormPage = () => {
         restaurant_id: merchantProfile.id,
         merchant_id: merchantProfile.id
       };
+      
+      console.log("Saving product with data:", productData);
       
       if (isEditMode && id) {
         // Update existing product

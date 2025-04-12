@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface MerchantProfile {
@@ -24,6 +23,12 @@ export interface Collaborator {
   };
   created_at: string;
   user_email?: string;
+}
+
+export interface CollaborationSummary {
+  merchantId: string;
+  businessName: string;
+  permissions: Record<string, boolean>;
 }
 
 // Fetch merchant profile for current user
@@ -171,7 +176,7 @@ export const addCollaborator = async (merchantId: string, email: string, permiss
   }
 };
 
-// Get collaborators for a merchant - Simplified to avoid type recursion
+// Get collaborators for a merchant - Fixed to prevent type instantiation issues
 export const getMerchantCollaborators = async (merchantId: string): Promise<Collaborator[]> => {
   try {
     // Use a simple select query without joins to avoid type issues
@@ -199,8 +204,8 @@ export const getMerchantCollaborators = async (merchantId: string): Promise<Coll
   }
 };
 
-// Get merchants where user is a collaborator - Simplified to avoid type recursion
-export const getUserCollaborations = async (): Promise<{merchantId: string, businessName: string, permissions: any}[]> => {
+// Get merchants where user is a collaborator - Fixed to prevent type instantiation issues
+export const getUserCollaborations = async (): Promise<CollaborationSummary[]> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return [];
@@ -224,7 +229,7 @@ export const getUserCollaborations = async (): Promise<{merchantId: string, busi
     if (merchantError) throw merchantError;
     
     // Manual join to avoid complex type issues
-    const result = [];
+    const result: CollaborationSummary[] = [];
     for (const collab of data) {
       const merchant = merchants?.find(m => m.id === collab.merchant_id);
       if (merchant) {

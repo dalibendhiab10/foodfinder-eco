@@ -172,16 +172,20 @@ export const addCollaborator = async (merchantId: string, email: string, permiss
 // Get collaborators for a merchant
 export const getMerchantCollaborators = async (merchantId: string): Promise<Collaborator[]> => {
   try {
+    // Simplify the query to avoid deep type instantiation
     const { data, error } = await supabase
       .from('merchant_collaborators')
-      .select('*')
+      .select('id, merchant_id, user_id, permissions, created_at')
       .eq('merchant_id', merchantId);
     
     if (error) throw error;
     
     // Parse the JSON permissions to ensure they match the expected type
     return data?.map(item => ({
-      ...item,
+      id: item.id,
+      merchant_id: item.merchant_id,
+      user_id: item.user_id,
+      created_at: item.created_at,
       permissions: typeof item.permissions === 'string' 
         ? JSON.parse(item.permissions) 
         : item.permissions
@@ -198,21 +202,23 @@ export const getUserCollaborations = async (): Promise<{merchantId: string, busi
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return [];
 
+    // Simplify the query to avoid deep type instantiation
     const { data, error } = await supabase
-      .from('merchant_collaborators')
+      .from('merchant_collaborators as mc')
       .select(`
-        merchant_id,
-        permissions,
-        merchant_profiles:merchant_profiles(business_name)
+        mc.merchant_id,
+        mc.permissions,
+        mp.business_name
       `)
-      .eq('user_id', session.session.user.id);
+      .eq('mc.user_id', session.session.user.id)
+      .join('merchant_profiles as mp', 'mc.merchant_id', 'mp.id');
     
     if (error) throw error;
     
     return (data || []).map(item => ({
       merchantId: item.merchant_id,
       permissions: item.permissions,
-      businessName: item.merchant_profiles?.business_name || 'Unknown Business'
+      businessName: item.business_name || 'Unknown Business'
     }));
   } catch (error) {
     console.error('Error fetching collaborations:', error);

@@ -171,10 +171,10 @@ export const addCollaborator = async (merchantId: string, email: string, permiss
   }
 };
 
-// Get collaborators for a merchant
+// Get collaborators for a merchant - Simplified to avoid type recursion
 export const getMerchantCollaborators = async (merchantId: string): Promise<Collaborator[]> => {
   try {
-    // Use a simple select query to avoid type instantiation issues
+    // Use a simple select query without joins to avoid type issues
     const { data, error } = await supabase
       .from('merchant_collaborators')
       .select('*')
@@ -199,7 +199,7 @@ export const getMerchantCollaborators = async (merchantId: string): Promise<Coll
   }
 };
 
-// Get merchants where user is a collaborator
+// Get merchants where user is a collaborator - Simplified to avoid type recursion
 export const getUserCollaborations = async (): Promise<{merchantId: string, businessName: string, permissions: any}[]> => {
   try {
     const { data: session } = await supabase.auth.getSession();
@@ -240,5 +240,32 @@ export const getUserCollaborations = async (): Promise<{merchantId: string, busi
   } catch (error) {
     console.error('Error fetching collaborations:', error);
     return [];
+  }
+};
+
+// Now let's add a function to assign merchant role to a specific user
+export const addMerchantRoleToUser = async (userId: string): Promise<boolean> => {
+  try {
+    // Add merchant role to user
+    const { error } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        role: 'merchant'
+      });
+    
+    if (error) {
+      // If the role already exists, this is not an error
+      if (error.code === '23505') {  // Unique violation
+        console.log('User already has merchant role');
+        return true;
+      }
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error adding merchant role:', error);
+    throw error;
   }
 };

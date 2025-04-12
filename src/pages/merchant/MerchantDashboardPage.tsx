@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -56,7 +57,7 @@ const MerchantDashboardPage = () => {
         const items = await getAllFoodItems();
         setFoodItems(items.filter(item => item.restaurant_id === merchantProfile.id));
         
-        // Use a simple select query without joins to avoid type issues
+        // Simplified query to avoid type recursion issues
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
           .select('*')
@@ -65,7 +66,6 @@ const MerchantDashboardPage = () => {
           
         if (orderError) throw orderError;
         
-        // Process orders with minimal complexity
         if (orderData) {
           const processedOrders = [];
           

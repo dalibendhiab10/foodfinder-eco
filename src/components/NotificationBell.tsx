@@ -1,3 +1,4 @@
+
 import { Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -39,7 +40,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ unreadCount = 0 }) 
 
     // Subscribe to notification changes
     const channel = supabase
-      .channel('public:notifications')
+      .channel('notifications')
       .on('postgres_changes',
         {
           event: 'INSERT',

@@ -1,3 +1,4 @@
+
 import { ToastContainer, toast } from 'react-toastify'; // Added toast import
 import 'react-toastify/dist/ReactToastify.css';
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,7 +27,13 @@ import TableMenuPage from "./pages/TableMenuPage";
 import TableCheckoutPage from "./pages/TableCheckoutPage";
 import GuideScreen from "./components/GuideScreen";
 import TopBar from "./components/TopBar"; // Added TopBar import
-import { useEffect, useState } from "react";
+
+// Merchant pages
+import MerchantProfilePage from "./pages/merchant/MerchantProfilePage";
+import MerchantDashboardPage from "./pages/merchant/MerchantDashboardPage";
+import ProductFormPage from "./pages/merchant/ProductFormPage";
+import CollaboratorsPage from "./pages/merchant/CollaboratorsPage";
+
 const queryClient = new QueryClient();
 
 // Improved auth guard
@@ -108,6 +115,12 @@ const AppRoutes = () => {
       <Route path="/restaurant/:restaurantId/table/:tableId/session/:sessionId" element={<ProtectedRoute><TableMenuPage /></ProtectedRoute>} />
       <Route path="/restaurant/:restaurantId/table/:tableId/checkout/:sessionId" element={<ProtectedRoute><TableCheckoutPage /></ProtectedRoute>} />
       
+      {/* Merchant Routes */}
+      <Route path="/merchant/profile" element={<ProtectedRoute><MerchantProfilePage /></ProtectedRoute>} />
+      <Route path="/merchant/dashboard" element={<ProtectedRoute><MerchantDashboardPage /></ProtectedRoute>} />
+      <Route path="/merchant/products/new" element={<ProtectedRoute><ProductFormPage /></ProtectedRoute>} />
+      <Route path="/merchant/products/:id" element={<ProtectedRoute><ProductFormPage /></ProtectedRoute>} />
+      <Route path="/merchant/collaborators" element={<ProtectedRoute><CollaboratorsPage /></ProtectedRoute>} />
       
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" />} /> {/* Redirect unknown paths to guide */}

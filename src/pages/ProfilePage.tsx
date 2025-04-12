@@ -1,14 +1,15 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
-import { User, Settings, Heart, Star, CreditCard, LogOut, Leaf, Loader2 } from 'lucide-react'; // Removed Award, Gift, ChevronRight
+import { User, Settings, Heart, Star, CreditCard, LogOut, Leaf, Loader2, Store } from 'lucide-react'; // Added Store icon
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-// Removed Progress import
 import { getUserLoyaltyProfile } from '@/services/loyaltyService';
-import EcoImpactCard from '@/components/EcoImpactCard'; // Added import
+import EcoImpactCard from '@/components/EcoImpactCard';
+import { checkMerchantRole } from '@/services/merchantService'; // Import to check merchant role
 
 const ProfilePage = () => {
   const { user, signOut } = useAuth();
@@ -17,6 +18,7 @@ const ProfilePage = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userProfile, setUserProfile] = useState<{ ecoPoints: number, ecoLevel: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMerchant, setIsMerchant] = useState(false); // Add state for merchant role
 
   // Fetch user loyalty profile
   useEffect(() => {
@@ -27,6 +29,10 @@ const ProfilePage = () => {
         setLoading(true);
         const profile = await getUserLoyaltyProfile(user.id);
         setUserProfile(profile);
+        
+        // Check if user has merchant role
+        const hasMerchantRole = await checkMerchantRole();
+        setIsMerchant(hasMerchantRole);
       } catch (error) {
         console.error('Error fetching user profile:', error);
       } finally {
@@ -81,7 +87,6 @@ const ProfilePage = () => {
           </div>
           {/* Icon Buttons Container - Centered below text */}
           <div className="flex items-center justify-center space-x-2 pt-2">
-
             <Button
               variant="outline"
               size="icon"
@@ -100,6 +105,32 @@ const ProfilePage = () => {
       <div className="px-4">
         <EcoImpactCard userProfile={userProfile} loading={loading} />
 
+        {/* Restaurant Management Button - Only show if user has merchant role */}
+        {isMerchant && (
+          <Link to="/merchant/dashboard" className="w-full mb-6 block">
+            <Button 
+              className="w-full bg-amber-600 hover:bg-amber-700 flex items-center justify-center gap-2" 
+              size="lg"
+            >
+              <Store size={18} />
+              Manage My Restaurant
+            </Button>
+          </Link>
+        )}
+        
+        {/* If user is not a merchant, show a button to become one */}
+        {!isMerchant && (
+          <Link to="/merchant/profile" className="w-full mb-6 block">
+            <Button 
+              className="w-full bg-amber-600 hover:bg-amber-700 flex items-center justify-center gap-2" 
+              size="lg"
+            >
+              <Store size={18} />
+              Become a Restaurant Owner
+            </Button>
+          </Link>
+        )}
+
       {/* Menu Section - Use current logic but wrap in a Card for visual grouping */}
         <Card className="shadow-lg">
           <CardContent className="p-2"> {/* Reduced padding for list items */}
@@ -115,8 +146,6 @@ const ProfilePage = () => {
                   <span>{item.label}</span>
                 </Link>
               ))}
-              {/* Separator can be added if needed between items or sections */}
-              {/* <Separator /> */}
             </div>
           </CardContent>
         </Card>

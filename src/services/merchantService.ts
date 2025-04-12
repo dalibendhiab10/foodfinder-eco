@@ -174,24 +174,25 @@ export const addCollaborator = async (merchantId: string, email: string, permiss
 // Get collaborators for a merchant
 export const getMerchantCollaborators = async (merchantId: string): Promise<Collaborator[]> => {
   try {
-    // Further simplify the query to avoid type instantiation errors
+    // Use a simple select query to avoid type instantiation issues
     const { data, error } = await supabase
       .from('merchant_collaborators')
-      .select('id, merchant_id, user_id, permissions, created_at')
+      .select('*')
       .eq('merchant_id', merchantId);
     
     if (error) throw error;
+    if (!data) return [];
     
-    // Parse the JSON permissions to ensure they match the expected type
-    return data?.map(item => ({
+    // Process the data after fetching to ensure proper types
+    return data.map(item => ({
       id: item.id,
       merchant_id: item.merchant_id,
       user_id: item.user_id,
-      created_at: item.created_at,
+      created_at: item.created_at || '',
       permissions: typeof item.permissions === 'string' 
         ? JSON.parse(item.permissions) 
-        : item.permissions
-    })) || [];
+        : (item.permissions || {view_orders: true, manage_products: false})
+    }));
   } catch (error) {
     console.error('Error fetching collaborators:', error);
     throw error;
@@ -204,34 +205,38 @@ export const getUserCollaborations = async (): Promise<{merchantId: string, busi
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) return [];
 
-    // Get collaborations data
-    const { data: collabData, error: collabError } = await supabase
+    // Simplify query to avoid deep type instantiation
+    const { data, error } = await supabase
       .from('merchant_collaborators')
       .select('merchant_id, permissions')
       .eq('user_id', session.session.user.id);
     
-    if (collabError) throw collabError;
-    if (!collabData || collabData.length === 0) return [];
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
     
-    // Get merchant names in a separate query
-    const merchantIds = collabData.map(item => item.merchant_id);
-    
-    const { data: merchantData, error: merchantError } = await supabase
+    // Get merchant names in a separate query to avoid nesting
+    const merchantIds = data.map(item => item.merchant_id);
+    const { data: merchants, error: merchantError } = await supabase
       .from('merchant_profiles')
       .select('id, business_name')
       .in('id', merchantIds);
       
     if (merchantError) throw merchantError;
     
-    // Join the data manually
-    return collabData.map(collab => {
-      const merchant = merchantData?.find(m => m.id === collab.merchant_id);
-      return {
-        merchantId: collab.merchant_id,
-        permissions: collab.permissions,
-        businessName: merchant?.business_name || 'Unknown Business'
-      };
-    });
+    // Manual join to avoid complex type issues
+    const result = [];
+    for (const collab of data) {
+      const merchant = merchants?.find(m => m.id === collab.merchant_id);
+      if (merchant) {
+        result.push({
+          merchantId: collab.merchant_id,
+          permissions: collab.permissions,
+          businessName: merchant.business_name
+        });
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error('Error fetching collaborations:', error);
     return [];

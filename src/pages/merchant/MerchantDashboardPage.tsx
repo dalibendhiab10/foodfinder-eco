@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -57,47 +56,36 @@ const MerchantDashboardPage = () => {
         const items = await getAllFoodItems();
         setFoodItems(items.filter(item => item.restaurant_id === merchantProfile.id));
         
-        // Get orders with a simpler approach
+        // Use a simple select query without joins to avoid type issues
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
-          .select('id, created_at, status, subtotal, tax, delivery_fee, total, user_id, restaurant_table_id, table_session_id, order_type, is_paid')
+          .select('*')
           .eq('restaurant_id', merchantProfile.id)
           .order('created_at', { ascending: false });
           
         if (orderError) throw orderError;
         
-        // Get item counts in a separate loop to avoid deep nesting
-        const itemCounts: {orderId: string, count: number}[] = [];
-        
-        if (orderData && orderData.length > 0) {
-          // Get counts individually for each order
+        // Process orders with minimal complexity
+        if (orderData) {
+          const processedOrders = [];
+          
           for (const order of orderData) {
+            // Get item count separately
             const { count } = await supabase
               .from('order_items')
               .select('*', { count: 'exact' })
               .eq('order_id', order.id);
-            
-            itemCounts.push({
-              orderId: order.id,
-              count: count || 0
+              
+            processedOrders.push({
+              ...order,
+              status: ensureOrderStatus(order.status),
+              order_type: ensureOrderType(order.order_type || 'delivery'),
+              items_count: count || 0
             });
           }
-        }
-        
-        // Process the orders with proper type handling
-        const processedOrders: Order[] = (orderData || []).map(order => {
-          const itemCount = itemCounts.find(item => item.orderId === order.id)?.count || 0;
           
-          return {
-            ...order,
-            status: ensureOrderStatus(order.status),
-            order_type: ensureOrderType(order.order_type || 'delivery'),
-            items_count: itemCount
-          };
-        });
-        
-        setOrders(processedOrders);
-        
+          setOrders(processedOrders);
+        }
       } catch (error) {
         console.error('Failed to load merchant data:', error);
         toast({

@@ -22,7 +22,7 @@ import { fetchMerchantProfile, MerchantProfile } from '@/services/merchantServic
 import { FoodItem, getAllFoodItems } from '@/services/foodService';
 import MerchantNav from '@/components/merchant/MerchantNav';
 import { Order } from '@/types/orders';
-import { ensureOrderStatus } from '@/types/database'; // Import helper
+import { ensureOrderStatus, ensureOrderType } from '@/types/database'; // Import both helper functions
 import { supabase } from '@/integrations/supabase/client';
 import { ShoppingBag, Package, TrendingUp } from 'lucide-react';
 
@@ -71,6 +71,7 @@ const MerchantDashboardPage = () => {
         const processedOrders: Order[] = (orderData || []).map(order => ({
           ...order,
           status: ensureOrderStatus(order.status),
+          order_type: ensureOrderType(order.order_type || 'delivery'),
           items_count: Number(order.items_count)
         }));
         

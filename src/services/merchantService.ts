@@ -54,7 +54,13 @@ export const fetchMerchantProfile = async (): Promise<MerchantProfile | null> =>
 };
 
 // Create a new merchant profile
-export const createMerchantProfile = async (profile: Partial<Omit<MerchantProfile, 'id' | 'user_id' | 'created_at' | 'is_approved'>>): Promise<MerchantProfile> => {
+export const createMerchantProfile = async (profile: { 
+  business_name: string; 
+  description?: string | null; 
+  address?: string | null;
+  phone?: string | null;
+  logo_url?: string | null;
+}): Promise<MerchantProfile> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) throw new Error('Not authenticated');
@@ -92,6 +98,7 @@ export const updateMerchantProfile = async (
   updates: Partial<Omit<MerchantProfile, 'id' | 'user_id' | 'created_at' | 'is_approved'>>
 ): Promise<MerchantProfile> => {
   try {
+    // Ensure business_name is required for update if it's included
     const { data, error } = await supabase
       .from('merchant_profiles')
       .update(updates)

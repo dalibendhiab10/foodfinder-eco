@@ -57,36 +57,37 @@ const MerchantDashboardPage = () => {
         const items = await getAllFoodItems();
         setFoodItems(items.filter(item => item.restaurant_id === merchantProfile.id));
         
-        // Load merchant orders - Use a simple query to avoid deep type instantiation
+        // Further simplify the query to avoid deep type instantiation
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
-          .select(`
-            id, 
-            created_at, 
-            status, 
-            subtotal, 
-            tax, 
-            delivery_fee, 
-            total, 
-            user_id, 
-            restaurant_table_id, 
-            table_session_id, 
-            order_type, 
-            is_paid,
-            items_count:order_items(count())
-          `)
+          .select('id, created_at, status, subtotal, tax, delivery_fee, total, user_id, restaurant_table_id, table_session_id, order_type, is_paid')
           .eq('restaurant_id', merchantProfile.id)
           .order('created_at', { ascending: false });
           
         if (orderError) throw orderError;
         
+        // Get items count separately to avoid deep type instantiation
+        const { data: itemsCountData } = await Promise.all(
+          (orderData || []).map(order => 
+            supabase
+              .from('order_items')
+              .select('id', { count: 'exact' })
+              .eq('order_id', order.id)
+              .then(({ count }) => ({ orderId: order.id, count: count || 0 }))
+          )
+        );
+        
         // Process the orders with proper type handling
-        const processedOrders: Order[] = (orderData || []).map(order => ({
-          ...order,
-          status: ensureOrderStatus(order.status),
-          order_type: ensureOrderType(order.order_type || 'delivery'),
-          items_count: Number(order.items_count) || 0
-        }));
+        const processedOrders: Order[] = (orderData || []).map(order => {
+          const itemCount = itemsCountData?.find(item => item.orderId === order.id)?.count || 0;
+          
+          return {
+            ...order,
+            status: ensureOrderStatus(order.status),
+            order_type: ensureOrderType(order.order_type || 'delivery'),
+            items_count: Number(itemCount)
+          };
+        });
         
         setOrders(processedOrders);
         

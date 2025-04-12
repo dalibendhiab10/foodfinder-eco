@@ -22,6 +22,7 @@ import { fetchMerchantProfile, MerchantProfile } from '@/services/merchantServic
 import { FoodItem, getAllFoodItems } from '@/services/foodService';
 import MerchantNav from '@/components/merchant/MerchantNav';
 import { Order } from '@/types/orders';
+import { ensureOrderStatus } from '@/types/database'; // Import helper
 import { supabase } from '@/integrations/supabase/client';
 import { ShoppingBag, Package, TrendingUp } from 'lucide-react';
 
@@ -65,7 +66,15 @@ const MerchantDashboardPage = () => {
           .order('created_at', { ascending: false });
           
         if (orderError) throw orderError;
-        setOrders(orderData || []);
+        
+        // Transform the data to match Order type
+        const processedOrders: Order[] = (orderData || []).map(order => ({
+          ...order,
+          status: ensureOrderStatus(order.status),
+          items_count: Number(order.items_count)
+        }));
+        
+        setOrders(processedOrders);
         
       } catch (error) {
         console.error('Failed to load merchant data:', error);

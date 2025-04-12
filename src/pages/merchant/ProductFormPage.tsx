@@ -154,10 +154,17 @@ const ProductFormPage = () => {
       // Parse tags
       const parsedTags = data.tags 
         ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-        : null;
+        : [];
       
+      // Ensure all required fields are included and explicitly set
       const productData = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        original_price: data.original_price,
+        discounted_price: data.discounted_price,
+        quantity: data.quantity,
+        image_url: data.image_url || null,
+        is_flash_deal: data.is_flash_deal,
         tags: parsedTags,
         restaurant_id: merchantProfile.id,
         merchant_id: merchantProfile.id

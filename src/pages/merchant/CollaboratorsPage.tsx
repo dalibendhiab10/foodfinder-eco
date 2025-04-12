@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge'; // Import Badge from shadcn
 import MerchantNav from '@/components/merchant/MerchantNav';
 import { fetchMerchantProfile, getMerchantCollaborators, addCollaborator, Collaborator } from '@/services/merchantService';
 import { supabase } from '@/integrations/supabase/client';

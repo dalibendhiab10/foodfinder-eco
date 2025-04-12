@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import BottomNav from '@/components/BottomNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { Order, OrderStatus } from '@/types/orders';
+import { ensureOrderStatus } from '@/types/database'; // Import the helper function
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -47,8 +48,9 @@ const OrdersPage = () => {
         // Process and format orders
         const processedOrders: Order[] = (data || []).map((order) => ({
           ...order,
+          status: ensureOrderStatus(order.status), // Convert string to OrderStatus type
           items_count: Number(order.items_count),
-          restaurant_name: order.restaurant_name?.[0]?.name || 'Unknown Restaurant'
+          restaurant_name: order.restaurant_name?.[0]?.restaurants?.name || 'Unknown Restaurant'
         }));
         
         setOrders(processedOrders);

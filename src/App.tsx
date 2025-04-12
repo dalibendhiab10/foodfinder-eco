@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "rea
 import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./redux/store";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { useState, useEffect } from 'react'; // Add missing imports
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import MapPage from "./pages/MapPage";

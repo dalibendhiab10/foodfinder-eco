@@ -94,7 +94,13 @@ const MerchantProfilePage = () => {
       
       if (profile) {
         // Update existing profile
-        const updatedProfile = await updateMerchantProfile(profile.id, data);
+        const updatedProfile = await updateMerchantProfile(profile.id, {
+          business_name: data.business_name,
+          description: data.description || null,
+          address: data.address || null,
+          phone: data.phone || null,
+          logo_url: data.logo_url || null
+        });
         setProfile(updatedProfile);
         toast({
           title: "Profile updated",
@@ -102,7 +108,13 @@ const MerchantProfilePage = () => {
         });
       } else {
         // Create new profile
-        const newProfile = await createMerchantProfile(data);
+        const newProfile = await createMerchantProfile({
+          business_name: data.business_name,
+          description: data.description || null,
+          address: data.address || null,
+          phone: data.phone || null,
+          logo_url: data.logo_url || null
+        });
         setProfile(newProfile);
         toast({
           title: "Profile created",

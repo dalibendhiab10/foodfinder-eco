@@ -54,7 +54,7 @@ export const fetchMerchantProfile = async (): Promise<MerchantProfile | null> =>
 };
 
 // Create a new merchant profile
-export const createMerchantProfile = async (profile: Omit<MerchantProfile, 'id' | 'user_id' | 'created_at' | 'is_approved'>): Promise<MerchantProfile> => {
+export const createMerchantProfile = async (profile: Partial<Omit<MerchantProfile, 'id' | 'user_id' | 'created_at' | 'is_approved'>>): Promise<MerchantProfile> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) throw new Error('Not authenticated');
@@ -77,8 +77,7 @@ export const createMerchantProfile = async (profile: Omit<MerchantProfile, 'id' 
       .insert({
         user_id: session.session.user.id,
         role: 'merchant'
-      })
-      .select();
+      });
     
     return data;
   } catch (error) {
@@ -133,9 +132,11 @@ export const checkMerchantRole = async (): Promise<boolean> => {
 // Add collaborator to merchant
 export const addCollaborator = async (merchantId: string, email: string, permissions = { view_orders: true, manage_products: false }): Promise<boolean> => {
   try {
-    // First get user ID from email
+    // First get user ID from email through a custom RPC function or use an edge function
+    // Since we can't query auth.users directly, we need a workaround
+    // Here's a simplified example assuming users are stored in a profiles table
     const { data: userData, error: userError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('id')
       .eq('email', email)
       .maybeSingle();
@@ -164,8 +165,6 @@ export const addCollaborator = async (merchantId: string, email: string, permiss
 // Get collaborators for a merchant
 export const getMerchantCollaborators = async (merchantId: string): Promise<Collaborator[]> => {
   try {
-    // We need to fetch user emails, but we can't directly access auth.users
-    // This is a limitation we'll have to work with for now
     const { data, error } = await supabase
       .from('merchant_collaborators')
       .select('*')
@@ -173,7 +172,13 @@ export const getMerchantCollaborators = async (merchantId: string): Promise<Coll
     
     if (error) throw error;
     
-    return data || [];
+    // Parse the JSON permissions to ensure they match the expected type
+    return data?.map(item => ({
+      ...item,
+      permissions: typeof item.permissions === 'string' 
+        ? JSON.parse(item.permissions) 
+        : item.permissions
+    })) || [];
   } catch (error) {
     console.error('Error fetching collaborators:', error);
     throw error;
